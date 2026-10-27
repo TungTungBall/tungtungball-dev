@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
@@ -8,6 +9,9 @@ export default function Home() {
         <h1 id="page-title" className="text-3xl font-bold tracking-tight">헬스미스</h1>
         <p className="leading-relaxed text-muted-foreground">프론트엔드 기본 화면이 준비되었습니다.</p>
         <Button type="button" disabled>준비 완료</Button>
+        <div>
+          <Link href="/backend-connection" prefetch={false} className="text-sm font-medium underline underline-offset-4">백엔드 연결 확인</Link>
+        </div>
       </section>
     </main>
   );
