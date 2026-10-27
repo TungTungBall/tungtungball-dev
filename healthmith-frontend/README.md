@@ -2,7 +2,8 @@
 
 Next.js App Router와 TypeScript 기반의 실행 가능한 최소 구조입니다.
 기본 화면과 UI 스타일, 단위 테스트, 브라우저 스모크 테스트를 포함합니다.
-실제 서비스 기능과 백엔드 연결은 아직 구현하지 않았습니다.
+실제 서비스 기능은 아직 구현하지 않았습니다. 시작 화면의 `백엔드 연결 확인`에서 Spring의 `/health` 상태를 확인할 수 있습니다.
+Mac에서 설치·실행·테스트와 실제 Spring 연결까지 확인한 결과는 [Mac 실행 기록](docs/mac-verification-2026-10-27.md)에 있습니다.
 
 ## 위치와 담당 범위
 
@@ -48,7 +49,7 @@ pnpm --version
 macOS Apple Silicon에서는 arm64, Intel에서는 x64 Node.js를 사용합니다.
 `node -p "process.arch"`로 확인하고 Rosetta의 x64 환경과 arm64 환경을 섞지 마세요.
 다른 OS·아키텍처의 `node_modules`를 복사하지 말고 각 기기에서 설치합니다.
-이번 뼈대에는 Java·Python·Docker·DB·API 키가 필요하지 않습니다.
+프론트 기본 화면과 기존 E2E 검사에는 Java·Python·Docker·DB·API 키가 필요하지 않습니다. 실제 백엔드 연결 화면을 확인하려면 별도로 JDK 21 기반 Spring 서버를 실행합니다.
 
 ## 설치와 개발 실행
 
@@ -100,7 +101,7 @@ pnpm start
 
 ## 환경변수와 ignore 규칙
 
-필수 환경변수는 없습니다. 백엔드 주소·인증 방식·공개 설정 이름은 API 계약을 정한 뒤 추가합니다.
+프론트 기본 실행의 필수 환경변수는 없습니다. `BACKEND_API_URL`은 선택적인 서버 전용 변수이며 미설정 시 로컬 8080의 Spring 서버를 사용합니다. 인증 방식·그 밖의 공개 설정은 해당 API 계약을 정한 뒤 추가합니다.
 비밀 키는 브라우저 코드에 넣지 않습니다.
 `.env*`는 제외하지만 향후 `.env.example`은 추적할 수 있도록 예외를 두었습니다.
 의존성·빌드·테스트 결과는 `.gitignore`로 제외하고 `pnpm-lock.yaml`은 커밋합니다.
