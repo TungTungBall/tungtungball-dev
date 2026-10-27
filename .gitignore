@@ -1,0 +1,4 @@
+# Repository-local editor and OS files
+.idea/
+.DS_Store
+Thumbs.db
