@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { connection } from "next/server";
+import { getBackendApiUrl } from "@/config/env";
 import { fetchBackendHealth } from "./health";
 
 const messages = {
@@ -14,7 +15,7 @@ const messages = {
 
 export default async function BackendConnectionPage() {
   await connection();
-  const result = await fetchBackendHealth(process.env.BACKEND_API_URL ?? "http://127.0.0.1:8080");
+  const result = await fetchBackendHealth(getBackendApiUrl());
   const connected = result.state === "connected";
 
   return (
