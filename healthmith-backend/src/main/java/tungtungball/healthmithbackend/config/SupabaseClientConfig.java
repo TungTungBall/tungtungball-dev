@@ -1,5 +1,6 @@
 package tungtungball.healthmithbackend.config;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +12,7 @@ import reactor.netty.http.client.HttpClient;
 /**
  * Supabase Data API(/rest/v1)를 호출하는 WebClient.
  * 이 설정은 기본 주소, apikey 헤더, 응답 타임아웃만 정한다.
+ * Spring이 만든 WebClient.Builder가 있으면 그것을 복사해 쓴다. 그래야 전역 JSON 설정(snake_case 등)이 Supabase 응답에도 적용된다.
  * 사용자 JWT(Authorization 헤더)는 요청마다 서버 영역 코드가 붙인다 (STACK.md 3절).
  */
 @Configuration
@@ -20,13 +22,13 @@ public class SupabaseClientConfig {
     private static final String DATA_API_PATH = "/rest/v1";
 
     @Bean
-    public WebClient supabaseWebClient(SupabaseProperties properties) {
+    public WebClient supabaseWebClient(SupabaseProperties properties, ObjectProvider<WebClient.Builder> builders) {
         HttpClient httpClient = HttpClient.create();
         if (properties.responseTimeout() != null) {
             httpClient = httpClient.responseTimeout(properties.responseTimeout());
         }
 
-        WebClient.Builder builder = WebClient.builder()
+        WebClient.Builder builder = builders.getIfAvailable(WebClient::builder).clone()
                 .clientConnector(new ReactorClientHttpConnector(httpClient));
         if (StringUtils.hasText(properties.url())) {
             builder.baseUrl(properties.url().replaceAll("/+$", "") + DATA_API_PATH);
