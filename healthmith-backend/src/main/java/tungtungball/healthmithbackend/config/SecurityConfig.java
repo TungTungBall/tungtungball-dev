@@ -50,8 +50,8 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         List<String> origins = corsProperties.allowedOrigins();
         configuration.setAllowedOrigins(origins == null ? List.of() : origins);
-        configuration.setAllowedMethods(List.of("GET", "POST"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PATCH"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Idempotency-Key"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration(API_PATH_PATTERN, configuration);
