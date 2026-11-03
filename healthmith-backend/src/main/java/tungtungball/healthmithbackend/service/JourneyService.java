@@ -12,6 +12,8 @@ import tungtungball.healthmithbackend.dto.CurriculumResponse;
 import tungtungball.healthmithbackend.dto.WorkoutSessionResponse;
 import tungtungball.healthmithbackend.dto.JourneyRequest;
 import tungtungball.healthmithbackend.dto.JourneyResponse;
+import tungtungball.healthmithbackend.dto.GenerationWorkflowResponse;
+import tungtungball.healthmithbackend.dto.GenerationRequestResponse;
 import org.springframework.http.HttpStatus;
 import java.util.Base64;
 import java.util.HashSet;
@@ -23,7 +25,8 @@ import java.util.UUID;
 public class JourneyService {
     private final JourneyClient client;
     private final JsonMapper mapper;
-    public JourneyService(JourneyClient client, JsonMapper mapper) { this.client=client;this.mapper=mapper; }
+    private final GenerationWorkflowService workflow;
+    public JourneyService(JourneyClient client, JsonMapper mapper, GenerationWorkflowService workflow) { this.client=client;this.mapper=mapper;this.workflow=workflow; }
     public <T> Mono<T> command(String operation, String id, String key, Object payload, Jwt jwt, Class<T> type) {
         return Mono.defer(() -> {
             owner(jwt);
@@ -43,7 +46,14 @@ public class JourneyService {
                     || new HashSet<>(parts).size()!=parts.size() || (parts.contains("없음") && parts.size()!=1)) {
                 throw new ApiException(HttpStatus.BAD_REQUEST,"INVALID_FEEDBACK","설문 입력을 확인해 주세요.",List.of(new ApiFieldError("soreness_body_parts","INVALID_INPUT","허용된 부위를 중복 없이 선택해 주세요.")));
             }
-            return command("feedback",id,key,request,jwt,JourneyResponse.FeedbackSaved.class);
+            return this.<JourneyResponse.FeedbackSaved>command("feedback",id,key,request,jwt,JourneyResponse.FeedbackSaved.class).flatMap(saved -> {
+                String feedbackId=saved.feedback().id().toString();
+                Mono<java.util.Optional<UUID>> next=workflow.execute("next",feedbackId,feedbackId,new GenerationWorkflowResponse.Empty(),jwt,GenerationRequestResponse.class)
+                        .map(job -> java.util.Optional.of(job.id())).onErrorReturn(java.util.Optional.empty());
+                Mono<java.util.Optional<UUID>> summary=workflow.execute("summary",null,feedbackId,new GenerationWorkflowResponse.Empty(),jwt,GenerationWorkflowResponse.Accepted.class)
+                        .map(job -> java.util.Optional.of(job.id())).onErrorReturn(java.util.Optional.empty());
+                return next.flatMap(n -> summary.map(t -> new JourneyResponse.FeedbackSaved(saved.feedback(),saved.safetyNotice(),n.orElse(null),t.orElse(null))));
+            });
         });
     }
     public <T> Mono<T> query(String operation,String id,Jwt jwt,Class<T> type) {
