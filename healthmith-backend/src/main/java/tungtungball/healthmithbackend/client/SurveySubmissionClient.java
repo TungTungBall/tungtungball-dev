@@ -12,6 +12,7 @@ import tools.jackson.databind.json.JsonMapper;
 import tungtungball.healthmithbackend.config.error.ApiException;
 import tungtungball.healthmithbackend.dto.SurveySubmissionRequest;
 import tungtungball.healthmithbackend.dto.SurveySubmissionResponse;
+import tungtungball.healthmithbackend.dto.SurveySubmissionDetailResponse;
 
 import java.util.List;
 import java.util.UUID;
@@ -44,6 +45,41 @@ public class SurveySubmissionClient {
                         && answers.equals(row.answers()) && "prepared".equals(row.generationRequestStatus()))
                 .switchIfEmpty(Mono.error(saveFailed()))
                 .onErrorMap(error -> saveFailed());
+    }
+
+    public Mono<SurveySubmissionDetailResponse> find(UUID id, UUID owner, String accessToken) {
+        return webClient.get()
+                .uri(builder -> builder.path("/survey_submissions")
+                        .queryParam("select", "id,answers,generation_request_status,created_at,version")
+                        .queryParam("id", "eq." + id)
+                        .queryParam("user_id", "eq." + owner)
+                        .queryParam("limit", 2).build())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .retrieve()
+                .bodyToMono(SurveySubmissionDetailResponse[].class)
+                .switchIfEmpty(Mono.error(readFailed()))
+                .flatMap(rows -> {
+                    if (rows.length == 0) {
+                        return Mono.error(new ApiException(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND",
+                                "요청한 리소스를 찾을 수 없습니다.", List.of()));
+                    }
+                    if (rows.length != 1) {
+                        return Mono.error(readFailed());
+                    }
+                    SurveySubmissionDetailResponse row = rows[0];
+                    if (row == null || !id.equals(row.id()) || row.answers() == null || row.createdAt() == null
+                            || row.version() == null || row.version() < 1
+                            || !"prepared".equals(row.generationRequestStatus())) {
+                        return Mono.error(readFailed());
+                    }
+                    return Mono.just(row);
+                })
+                .onErrorMap(error -> error instanceof ApiException ? error : readFailed());
+    }
+
+    private ApiException readFailed() {
+        return new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR",
+                "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.", List.of());
     }
 
     private ApiException saveFailed() {
