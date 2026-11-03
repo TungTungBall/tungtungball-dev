@@ -227,6 +227,40 @@
 .hm-screen-link h2 { font-size: 14px; }
 .hm-screen-link p { margin-top: 2px; font-size: 10px; }
 .hm-screen-link:hover { border-color: var(--hm-violet); }
+.hm-shell.has-login .hm-main { padding-top: 0; padding-bottom: max(36px, env(safe-area-inset-bottom)); }
+.hm-login-back { margin-bottom: 16px; text-decoration: none; }
+.hm-login .hm-intro { text-align: center; }
+.hm-login .hm-eyebrow { color: var(--hm-violet); font-size: 10px; font-weight: 700; letter-spacing: 1.1px; }
+.hm-login .hm-intro h1 { font-size: 36px; line-height: 1.25; letter-spacing: -1.5px; }
+.hm-login .hm-description { font-size: 13px; }
+.hm-login-art { position: relative; display: grid; place-items: center; height: 230px; margin: 20px 0 24px; overflow: hidden; border: 1px solid #e5e0fa; border-radius: 130px 130px 24px 24px; background: radial-gradient(ellipse at 50% 50%, #dcd5ff, #f0edff 65%, #f6f7fc); }
+.hm-login-art .hm-gem { position: relative; z-index: 1; width: 172px; height: 172px; margin-top: -16px; filter: drop-shadow(0 12px 14px #7355f51c); }
+.hm-login-orbit { position: absolute; top: 24px; width: 174px; height: 174px; border: 1px solid #fff; border-radius: 50%; }
+.hm-login-orbit.is-outer { top: 0; width: 222px; height: 222px; border-color: #ffffff80; }
+.hm-login-art .hm-sparkle.one { top: 24%; left: 17%; font-size: 24px; }
+.hm-login-art .hm-sparkle.two { top: 58%; right: 17%; font-size: 17px; }
+.hm-login-art-caption { position: absolute; bottom: 15px; display: inline-flex; align-items: center; gap: 6px; font-size: 10px; color: #6552a5; }
+.hm-login-connect { text-align: center; }
+.hm-login-connect h2 { margin: 0; color: var(--hm-ink); font-size: 18px; font-weight: 700; letter-spacing: -.6px; }
+.hm-login-connect > .hm-description { margin: 6px 0 18px; font-size: 12px; }
+.hm-app .hm-google-button { position: relative; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; height: auto; min-height: 48px; padding: 12px; border: 1px solid #747775; border-radius: 12px; background: #fff; color: #1f1f1f; font-family: "Google Sans", "Noto Sans KR", Arial, sans-serif; font-size: 14px; font-weight: 500; line-height: 20px; white-space: normal; box-shadow: none; }
+.hm-app .hm-google-button:hover { background: #f7f8f8; border-color: #1f1f1f; }
+.hm-app .hm-google-button:disabled { opacity: .65; cursor: wait; }
+.hm-google-button img { flex-shrink: 0; object-fit: contain; }
+.hm-login-spinner { position: absolute; right: 16px; animation: hm-spin 1s linear infinite; }
+.hm-login-preview { color: var(--hm-muted); font-size: 10px; line-height: 1.7; margin: 12px 0 0; word-break: keep-all; }
+.hm-login-status { padding: 13px 14px; margin-bottom: 16px; text-align: left; background: var(--hm-soft); border: 1px solid #ded7ff; border-radius: 12px; color: #5f4b9e; }
+.hm-login-status strong { display: block; font-size: 13px; line-height: 1.6; font-weight: 700; }
+.hm-login-status p { margin: 4px 0 0; font-size: 12px; line-height: 1.65; word-break: keep-all; }
+.hm-login-status.is-error { background: var(--hm-danger-soft); border-color: #efd7e3; color: var(--hm-danger); }
+.hm-app .hm-login-cancel { display: flex; margin: 8px auto 0; min-height: 44px; padding: 10px 16px; color: var(--hm-muted); font-size: 12px; }
+.hm-login-reassurance { display: flex; justify-content: center; align-items: center; gap: 9px; margin: 24px 0 0; color: var(--hm-muted); }
+.hm-login-reassurance svg { flex-shrink: 0; color: var(--hm-violet); }
+.hm-login-reassurance p { margin: 0; font-size: 11px; line-height: 1.7; }
+.hm-login-explore { display: flex; gap: 4px; margin: 16px 0 0; font-size: 12px; }
+.hm-home-login { display: flex; justify-content: center; margin: 12px 0 0; }
+.hm-login-previews { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.hm-login-previews .hm-action { min-height: 44px; font-size: 12px; }
 @keyframes hm-spin { to { transform: rotate(360deg); } }
 @media (min-width: 600px) {
   .hm-shell { box-shadow: 0 0 0 1px #dfe3f0, 0 12px 64px #2029440a; }
