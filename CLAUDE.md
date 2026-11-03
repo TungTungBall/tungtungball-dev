@@ -12,7 +12,7 @@
 
 ## 먼저 확인할 것
 
-1. `git status --short`, `git branch --show-current`와 해당 경로의 `AGENTS.md`를 읽고 다른 사람의 변경을 보존한다.
+1. `git status --short`, `git branch --show-current`로 상태를 확인하고 다른 사람의 변경을 보존한다. 작업 폴더에 `AGENTS.md`가 있으면 먼저 읽는다.
 2. 해당 저장소 README와 [PRD](https://github.com/TungTungBall/tungtungball/blob/main/docs/PRD.md), [초기화 계획](https://github.com/TungTungBall/tungtungball/blob/main/docs/SETUP-PLAN.md)을 읽는다. 문서 저장소에서 작업 중이면 로컬 파일을 먼저 읽는다.
 3. 이슈의 담당자 1명, 대상 파일, 완료 조건과 검증 방법을 확인한다. 맡은 역할과 수정 영역을 먼저 정한다.
 4. 브랜치·커밋·PR·리뷰·병합은 [팀 작업 규칙](https://github.com/TungTungBall/tungtungball/blob/main/docs/team/working-agreement.md)을 따른다. main에 직접 커밋하지 않는다.
@@ -35,7 +35,7 @@
 
 - 프론트엔드 요구 버전은 Node.js `24.x`, pnpm `11.25.0`이다. `.node-version`은 `24.20.0`이다. JDK toolchain은 21, Gradle은 저장소 wrapper를 쓴다.
 - Windows 백엔드 명령은 `./gradlew` 대신 `.\gradlew.bat`를 쓴다. 실행하지 않은 OS의 결과를 통과로 기록하지 않는다.
-- 프론트 CI의 린트·타입·단위·빌드·E2E 성공과 Mac 백엔드 테스트 성공은 확인됐다. 이 결과로 팀원 5명의 직접 실행을 대신하지 않는다.
+- 위 명령은 프론트 CI와 Mac 1대(프론트 전체 검사·백엔드 테스트·실제 Spring 연결)에서 성공했다(2026-10-27 기준 5명 중 1명 기록). 현황은 [초기화 계획 6절](https://github.com/TungTungBall/tungtungball/blob/main/docs/SETUP-PLAN.md)에서 확인하며, 다른 사람의 결과로 본인 실행을 대신하지 않는다.
 - 현재 CI 설정은 프론트엔드만 대상으로 한다. 백엔드 CI나 저장소의 필수 검사 유무는 GitHub에서 따로 확인한다.
 - 의존성 복원·Chromium 준비와 최초 프로젝트 생성은 구분한다. 설치·초기화는 수업 안내대로 학생이 공식 문서를 보고 직접 진행하며, 이미 만든 프로젝트에 생성기를 다시 실행하지 않는다.
 
@@ -48,6 +48,16 @@
 - 상태·LLM 기본 양식이 비어 있으면 [PRD의 문서 기준](https://github.com/TungTungBall/tungtungball/blob/main/docs/PRD.md#문서를-읽는-순서와-기준)에 따라 작성된 백로그·사용자 흐름을 함께 확인한다.
 
 문서가 충돌하면 파일·절, 차이, 영향받는 US를 기록한다. 답이 필요한 작업만 보류하고 독립적인 작업을 계속한다. 번호·상태·수치·담당자·합의를 만들어 빈칸을 채우지 않는다.
+
+## 프로젝트 문서
+
+3주차에 팀이 약속한 문서다. 아래 `@` 경로는 문서 저장소 기준이며, 실행 저장소의 사본에서는 [문서 저장소](https://github.com/TungTungBall/tungtungball/tree/main/docs)의 같은 파일을 읽는다.
+
+- 코딩 스타일: @docs/CODE-STYLE.md
+- 데이터 구조: @docs/DATA-MODEL.md
+- UI 디자인 방향: @docs/DESIGN.md
+- API 약속: @docs/API.md
+- 첫 기능: @docs/decisions/first-feature.md
 
 ## 바꾸기 전에 확인할 경계
 

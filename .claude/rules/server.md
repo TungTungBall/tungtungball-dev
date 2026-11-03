@@ -2,7 +2,7 @@
 
 서버를 맡았을 때 적용한다. 경로는 실행 저장소 기준이다.
 
-- 구현 영역은 `healthmith-backend/src/main/java/tungtungball/healthmithbackend/`와 `src/main/resources/`다. 설정·의존성 변경은 공유 기반 담당과 범위를 확인한다.
+- 구현 영역은 `healthmith-backend/src/main/java/tungtungball/healthmithbackend/`(`config/` 제외)와 `src/main/resources/`(`application*.properties` 제외)다. 제외한 두 곳과 의존성은 공유 기반(테크 리드) 영역이므로 필요한 변경을 공유 기반 담당에게 요청한다.
 - `./gradlew bootRun`으로 실행하며 기본 포트는 8080이다. 현재 상태 확인 계약은 인증 없는 `GET /health` → HTTP 200, JSON `status: UP`이다. `HealthController`와 `SecurityConfig`를 함께 확인한다.
 - 활동 2는 시작점·health 뼈대까지다. 승인된 별도 작업 없이 로그인·DB·실제 운동 기능을 추가하지 않는다. 현재 HTTP Basic 설정을 제품의 Supabase JWT 구현으로 취급하지 않는다.
 - 루트·프론트·다른 담당자의 테스트를 함께 고치지 않는다. 추가 패키지는 이름·이유·영향 파일을 공유 기반 담당에게 전달한다.
