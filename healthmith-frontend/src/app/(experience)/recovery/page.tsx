@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ActionBar, ActionLink, Card, Notice, PageIntro } from "@/components/healthmith/ui";
+import { ActionBar, ActionLink, Card, PageIntro } from "@/components/healthmith/ui";
 
 export default function RecoveryPage() {
   const [pending, setPending] = useState(false);

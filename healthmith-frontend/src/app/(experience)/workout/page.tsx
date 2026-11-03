@@ -15,6 +15,10 @@ export default function WorkoutPage() {
   const router = useRouter();
   const stage = previewStages[workout.stageIndex] ?? previewStages[0];
 
+  if (workout.status === "paused") {
+    return <><PageIntro eyebrow="PAUSED" title="지금은 잠시 쉬는 중이에요" /><div className="hm-survey-bottom"><Notice>다시 준비되면 중단한 단계부터 이어갈 수 있어요.</Notice></div><ActionBar><ActionLink href="/workout/paused">일시정지 화면으로 돌아가기</ActionLink></ActionBar></>;
+  }
+
   function addPreviewRepetition() {
     const repetitions = workout.repetitions + 1;
     if (repetitions < stage.target) { setWorkout({ ...workout, repetitions }); return; }
