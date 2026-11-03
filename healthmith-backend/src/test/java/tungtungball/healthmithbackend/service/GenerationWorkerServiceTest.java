@@ -36,4 +36,19 @@ class GenerationWorkerServiceTest {
         var config=new GenerationWorkerProperties(true,"SECRET","GEMINI",null,null,null,null,null,null);
         assertThrows(IllegalStateException.class,config::validateEnabled);assertFalse(config.toString().contains("SECRET"));assertFalse(config.toString().contains("GEMINI"));
     }
+    @Test @DisplayName("US-04 (LLM) 다음 생성은 이전 커리큘럼·승인된 최신 요약 문맥 전달")
+    void nextContext() {
+        var job=mapper.readTree("""
+          {"kind":"curriculum","snapshot":{"purpose":{"type":"체력"},"intensity":2,"priority_body_parts":["상체"],"difficulty":2,"enjoyment":4,"previous_stages":[{"stage_index":1,"exercise_id":"A","target_repetitions":3,"pace_instruction":"검토된 속도","internal_focus_instruction":"등록 안내","user_id":"SECRET"}],"summary":"운동 선호 요약"},"candidates":[{"id":"A","name":"테스트","internal_focus_instruction":"등록 안내"}],"policy":{"purpose_mapping":{"체력":"체력"},"include_generated_summary":true,"adjustment_instruction":"승인된 조정 정책","repetition_limits":{"A":{"min":1,"max":3}},"pace_instructions":["검토된 속도"]}}
+          """);
+        var safe=service.safeInput(job);assertEquals("운동 선호 요약",safe.get("latest_successful_summary").asText());
+        assertEquals(5,safe.get("previous_curriculum").get(0).size());assertFalse(safe.toString().contains("SECRET"));
+    }
+    @Test @DisplayName("US-04 (실패·거절) 최신 생성 요약 전송 승인이 없으면 조용히 생략하지 않는다")
+    void summaryApprovalRequired() {
+        var job=mapper.readTree("""
+          {"kind":"curriculum","snapshot":{"purpose":{"type":"체력"},"intensity":2,"priority_body_parts":["상체"],"previous_stages":[],"summary":"이전 요약"},"candidates":[],"policy":{"purpose_mapping":{"체력":"체력"},"adjustment_instruction":"승인된 조정 정책"}}
+          """);
+        assertThrows(IllegalArgumentException.class,() -> service.safeInput(job));verifyNoInteractions(gemini);
+    }
 }
