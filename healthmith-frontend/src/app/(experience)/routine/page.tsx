@@ -30,6 +30,6 @@ export default function RoutinePage() {
     <label className="hm-confirmation"><input type="checkbox" checked={acknowledged} onChange={(event) => setAcknowledged(event.target.checked)} /><span>운동 안내를 확인했어요. · 운동·수치 예시</span></label>
     <div className="hm-routine-tools"><Link href="/preparation/body" className="hm-text-link">입력 내용 수정</Link><Button variant="ghost" className="hm-text-link" onClick={refreshPreview} disabled={refreshing}><RefreshCw size={13} />다시 만들기</Button></div>
     <Notice>시안 확인용 초안이에요. 실제 AI 생성이나 운동 처방이 아니에요.</Notice>
-    <ActionBar><Button className="hm-action-button" disabled={!acknowledged || refreshing} onClick={() => { setWorkout((value) => ({ ...value, confirmed: true })); router.push("/camera"); }}>이 루틴 확정하고 준비하기</Button></ActionBar>
+    <ActionBar><Button className="hm-action-button" disabled={!acknowledged || refreshing} onClick={() => { setWorkout({ stageIndex: 0, repetitions: 0, confirmed: true, status: "preview" }); router.push("/camera"); }}>이 루틴 확정하고 준비하기</Button></ActionBar>
   </>;
 }
