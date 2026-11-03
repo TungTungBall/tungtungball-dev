@@ -38,9 +38,10 @@ BEGIN
  IF jsonb_typeof(document) IS DISTINCT FROM 'object' OR document->>'command_order'<>'serialized' OR document->>'match_selector'<>'fifo'
   OR document->>'recognition_algorithm'<>'ordered_path_v1' OR document->>'size_metric'<>'bounding_box_area' OR document->>'power_band_policy'<>'first_match'
   OR document->>'mana_regeneration'<>'none' OR document->>'unlock_policy'<>'all_catalog_spells' OR document->>'npc_catchup'<>'skip_missed' THEN RETURN false; END IF;
- FOREACH k IN ARRAY ARRAY['initial_hp','initial_mana','slot_limit','samples_per_stroke','match_timeout_ms','ready_timeout_ms','battle_timeout_ms','event_poll_interval_ms','event_batch_size','max_effect_amount','max_canvas_dimension','max_casts_per_window','cast_window_ms'] LOOP
+ FOREACH k IN ARRAY ARRAY['initial_hp','slot_limit','samples_per_stroke','match_timeout_ms','ready_timeout_ms','battle_timeout_ms','event_poll_interval_ms','event_batch_size','max_effect_amount','max_canvas_dimension','max_casts_per_window','cast_window_ms'] LOOP
   IF jsonb_typeof(document->k) IS DISTINCT FROM 'number' OR (document->>k)!~'^[1-9][0-9]*$' OR (document->>k)::numeric>2147483647 THEN RETURN false; END IF;
  END LOOP;
+ IF jsonb_typeof(document->'initial_mana') IS DISTINCT FROM 'number' OR (document->>'initial_mana')!~'^[0-9]+$' OR (document->>'initial_mana')::numeric>2147483647 THEN RETURN false; END IF;
  IF (document->>'samples_per_stroke')::integer<2 OR (document->>'distance_scale')::numeric<=0 OR (document->>'max_power_multiplier')::numeric<0
   OR jsonb_typeof(document->'spells') IS DISTINCT FROM 'array' OR jsonb_array_length(document->'spells')=0
   OR jsonb_typeof(document->'default_spell_ids') IS DISTINCT FROM 'array' OR jsonb_array_length(document->'default_spell_ids')=0
