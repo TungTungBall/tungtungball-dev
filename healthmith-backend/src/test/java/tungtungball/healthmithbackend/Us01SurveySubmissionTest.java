@@ -11,12 +11,30 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import reactor.core.publisher.Mono;
+import tungtungball.healthmithbackend.client.SurveySubmissionClient;
+import tungtungball.healthmithbackend.config.error.ApiException;
+import tungtungball.healthmithbackend.dto.SurveySubmissionRequest;
+import tungtungball.healthmithbackend.dto.SurveySubmissionResponse;
+import org.springframework.http.HttpStatus;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.springSecurity;
 
 /**
  * US-01 사전조사 제출 API의 인수 조건 테스트.
- * 실제 Supabase JWT와 RLS는 테스트 계정이 준비된 별도 검증에서 다룬다.
+ * JWT principal·저장 클라이언트는 대역이다. 서명 검증은 별도 smoke, 실제 RLS는 별도 환경에서 확인한다.
  */
 @SpringBootTest
 class Us01SurveySubmissionTest {
@@ -29,10 +47,19 @@ class Us01SurveySubmissionTest {
     @Autowired
     private ApplicationContext context;
 
+    private static final UUID USER_ID = UUID.fromString("20000000-0000-4000-8000-000000000001");
+    private static final UUID SUBMISSION_ID = UUID.fromString("10000000-0000-4000-8000-000000000001");
+
+    @MockitoBean
+    private SurveySubmissionClient storage;
+
     private WebTestClient client;
 
     @BeforeEach
     void setUp() {
+        when(storage.insert(any(UUID.class), anyString(), any(SurveySubmissionRequest.Answers.class)))
+                .thenAnswer(invocation -> Mono.just(new SurveySubmissionResponse(
+                        SUBMISSION_ID, invocation.getArgument(2), "prepared", Instant.parse("2026-11-03T01:00:00Z"))));
         client = WebTestClient.bindToApplicationContext(context)
                 .apply(springSecurity())
                 .configureClient()
@@ -74,7 +101,7 @@ class Us01SurveySubmissionTest {
     @ValueSource(strings = {"체력", "감량", "근력", "자세", "자유 입력"})
     @DisplayName("US-01 (정상) 허용된 운동 목적을 제출할 수 있다")
     void supportedPurposeCanBeSubmitted(String type) {
-        String customText = "자유 입력".equals(type) ? "오래 걷고 싶다" : "null";
+        String customText = "자유 입력".equals(type) ? quote("오래 걷고 싶다") : "null";
 
         post(validAnswers(NO_LIMITATIONS, purpose(type, customText), "5", PRIORITY_PARTS))
                 .expectStatus().isCreated()
@@ -131,7 +158,7 @@ class Us01SurveySubmissionTest {
     @Test
     @DisplayName("US-01 (실패·거절) 운동 목적이 누락되면 입력 오류를 반환한다")
     void missingPurposeIsRejected() {
-        String answers = NO_LIMITATIONS + ",\"intensity\":5," + PRIORITY_PARTS;
+        String answers = NO_LIMITATIONS + ",\"purpose\":{\"custom_text\":null},\"intensity\":5," + PRIORITY_PARTS;
 
         expectInvalidInput(answers, "answers.purpose.type");
     }
@@ -176,10 +203,60 @@ class Us01SurveySubmissionTest {
                 .jsonPath("$.code").isEqualTo("INVALID_SURVEY")
                 .jsonPath("$.field_errors[0].field").isEqualTo("answers.priority_body_parts")
                 .jsonPath("$.field_errors[0].code").isEqualTo("BODY_PART_CONFLICT");
+        verifyNoInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("US-01 (권한) 인증이 없으면 저장을 호출하지 않는다")
+    void unauthenticatedRequestDoesNotWrite() {
+        client.post().uri(ENDPOINT).contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{\"answers\":{" + validAnswers(NO_LIMITATIONS, purpose("체력", "null"), "5", PRIORITY_PARTS) + "}}")
+                .exchange().expectStatus().isUnauthorized()
+                .expectBody().jsonPath("$.code").isEqualTo("UNAUTHORIZED");
+        verifyNoInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("US-01 (정상) JWT 소유자와 토큰을 한 번의 저장에 전달한다")
+    void validatedOwnerAndTokenArePassedToStorage() {
+        post(validAnswers(NO_LIMITATIONS, purpose("체력", "null"), "5", PRIORITY_PARTS))
+                .expectStatus().isCreated();
+        verify(storage).insert(eq(USER_ID), eq("token"), any(SurveySubmissionRequest.Answers.class));
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("US-01 (실패·거절) 저장 실패를 prepared 성공으로 응답하지 않는다")
+    void storageFailureIsNotPrepared() {
+        when(storage.insert(any(), anyString(), any())).thenReturn(Mono.error(new ApiException(
+                HttpStatus.INTERNAL_SERVER_ERROR, "SAVE_FAILED", "저장 실패", List.of())));
+        post(validAnswers(NO_LIMITATIONS, purpose("체력", "null"), "5", PRIORITY_PARTS))
+                .expectStatus().is5xxServerError()
+                .expectBody().jsonPath("$.code").isEqualTo("SAVE_FAILED")
+                .jsonPath("$.generation_request_status").doesNotExist();
+        verify(storage).insert(eq(USER_ID), eq("token"), any(SurveySubmissionRequest.Answers.class));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"\"5\"", "5.0", "5.5", "true", "null"})
+    @DisplayName("US-01 (실패·거절) 강도의 타입을 자동 변환하지 않는다")
+    void invalidIntensityTypesDoNotWrite(String intensity) {
+        expectInvalidInput(validAnswers(NO_LIMITATIONS, purpose("체력", "null"), intensity, PRIORITY_PARTS),
+                "answers.intensity");
+    }
+
+    @Test
+    @DisplayName("US-01 (실패·거절) 소유자 주입을 거절하고 저장하지 않는다")
+    void injectedOwnerDoesNotWrite() {
+        post(validAnswers(NO_LIMITATIONS, purpose("체력", "null"), "5", PRIORITY_PARTS)
+                + ",\"user_id\":\"20000000-0000-4000-8000-000000000002\"")
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.code").isEqualTo("INVALID_SURVEY");
+        verifyNoInteractions(storage);
     }
 
     private WebTestClient.ResponseSpec post(String answers) {
-        return client.mutateWith(mockUser())
+        return client.mutateWith(mockJwt().jwt(jwt -> jwt.subject(USER_ID.toString())))
                 .post().uri(ENDPOINT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("{\"answers\":{" + answers + "}}")
@@ -196,6 +273,7 @@ class Us01SurveySubmissionTest {
                 .jsonPath("$.field_errors[0].field").isEqualTo(field)
                 .jsonPath("$.field_errors[0].code").isEqualTo("INVALID_INPUT")
                 .jsonPath("$.generation_request_status").doesNotExist();
+        verifyNoInteractions(storage);
     }
 
     private static String validAnswers(String limitations, String purpose, String intensity, String priorityParts) {
@@ -207,6 +285,6 @@ class Us01SurveySubmissionTest {
     }
 
     private static String quote(String value) {
-        return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+        return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"").replace("\t", "\\t").replace("\n", "\\n").replace("\r", "\\r") + "\"";
     }
 }
