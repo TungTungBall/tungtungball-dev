@@ -52,7 +52,8 @@ BEGIN
  SELECT min((p->>'x')::numeric),max((p->>'x')::numeric),min((p->>'y')::numeric),max((p->>'y')::numeric) INTO minbx,maxbx,minby,maxby FROM jsonb_array_elements(all_b) p;
  scalea:=greatest(maxax-minax,maxay-minay);scaleb:=greatest(maxbx-minbx,maxby-minby);
  IF scalea=0 OR scaleb=0 THEN RETURN jsonb_build_object('recognized',false,'accuracy',0,'normalized_size',0,'power_multiplier',0); END IF;
- size:=least(1,greatest(0,(maxax-minax)*(maxay-minay)/((d->>'canvas_width')::numeric*(d->>'canvas_height')::numeric)));
+ SELECT (max((p->>'x')::numeric)-min((p->>'x')::numeric))*(max((p->>'y')::numeric)-min((p->>'y')::numeric)) INTO size FROM jsonb_array_elements(d->'strokes') stroke CROSS JOIN LATERAL jsonb_array_elements(stroke->'points') p;
+ size:=least(1,greatest(0,size));
  FOR i IN 0..jsonb_array_length(all_a)-1 LOOP
   pa:=all_a->i;pb:=all_b->i;
   dx:=((pa->>'x')::numeric-(maxax+minax)/2)/scalea-((pb->>'x')::numeric-(maxbx+minbx)/2)/scaleb;
