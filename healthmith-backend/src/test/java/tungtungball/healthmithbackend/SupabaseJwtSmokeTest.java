@@ -37,6 +37,8 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
+import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.springSecurity;
+
 /**
  * Supabase JWT 검증(이슈 #15)이 의도대로 동작하는지 확인하는 smoke 테스트.
  * 실제 Supabase 대신 테스트 안에서 만든 RSA 키로 토큰을 서명하고, 같은 검증 규칙(발급자·대상·만료)을 적용한다.
@@ -69,7 +71,10 @@ class SupabaseJwtSmokeTest {
 
     @BeforeEach
     void setUp() {
-        client = WebTestClient.bindToApplicationContext(context).configureClient().build();
+        client = WebTestClient.bindToApplicationContext(context)
+                .apply(springSecurity())
+                .configureClient()
+                .build();
     }
 
     @Test
