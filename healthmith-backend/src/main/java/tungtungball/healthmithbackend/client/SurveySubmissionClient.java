@@ -13,6 +13,7 @@ import tungtungball.healthmithbackend.config.error.ApiException;
 import tungtungball.healthmithbackend.dto.SurveySubmissionRequest;
 import tungtungball.healthmithbackend.dto.SurveySubmissionResponse;
 import tungtungball.healthmithbackend.dto.SurveySubmissionDetailResponse;
+import tungtungball.healthmithbackend.dto.SurveySubmissionUpdateRequest;
 
 import java.util.List;
 import java.util.UUID;
@@ -75,6 +76,58 @@ public class SurveySubmissionClient {
                     return Mono.just(row);
                 })
                 .onErrorMap(error -> error instanceof ApiException ? error : readFailed());
+    }
+
+    public Mono<SurveySubmissionDetailResponse> update(
+            UUID id, UUID key, SurveySubmissionUpdateRequest request, String accessToken) {
+        return webClient.post().uri("/rpc/update_survey_submission")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .bodyValue(new UpdateCommand(id, request.expectedVersion(), request.answers(), key))
+                .retrieve().bodyToMono(UpdateResult.class)
+                .switchIfEmpty(Mono.error(saveFailed()))
+                .flatMap(result -> {
+                    if ("UPDATED".equals(result.outcome())) {
+                        SurveySubmissionDetailResponse row = result.submission();
+                        if (row == null || !id.equals(row.id()) || !request.answers().equals(row.answers())
+                                || row.createdAt() == null || row.version() == null
+                                || request.expectedVersion() == Long.MAX_VALUE
+                                || row.version() != request.expectedVersion() + 1
+                                || !"prepared".equals(row.generationRequestStatus())) {
+                            return Mono.error(saveFailed());
+                        }
+                        return Mono.just(row);
+                    }
+                    if (result.submission() != null) {
+                        return Mono.error(saveFailed());
+                    }
+                    return Mono.error(updateFailure(result.outcome()));
+                })
+                .onErrorMap(error -> error instanceof ApiException ? error : saveFailed());
+    }
+
+    private ApiException updateFailure(String outcome) {
+        if (outcome == null) {
+            return saveFailed();
+        }
+        return switch (outcome) {
+            case "UNAUTHORIZED" -> new ApiException(HttpStatus.UNAUTHORIZED, outcome,
+                    "인증 상태를 확인해 주세요.", List.of());
+            case "RESOURCE_NOT_FOUND" -> new ApiException(HttpStatus.NOT_FOUND, outcome,
+                    "요청한 리소스를 찾을 수 없습니다.", List.of());
+            case "INVALID_STATE", "VERSION_CONFLICT", "IDEMPOTENCY_CONFLICT" ->
+                    new ApiException(HttpStatus.CONFLICT, outcome,
+                            "현재 상태나 요청 내용을 확인해 주세요.", List.of());
+            case "INVALID_INPUT" -> new ApiException(HttpStatus.BAD_REQUEST, "INVALID_SURVEY",
+                    "입력 내용을 확인해 주세요.", List.of());
+            default -> saveFailed();
+        };
+    }
+
+    private record UpdateCommand(UUID pSubmissionId, Long pExpectedVersion,
+                                 SurveySubmissionRequest.Answers pAnswers, UUID pIdempotencyKey) {
+    }
+
+    private record UpdateResult(String outcome, SurveySubmissionDetailResponse submission) {
     }
 
     private ApiException readFailed() {
