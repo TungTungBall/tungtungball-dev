@@ -1,11 +1,23 @@
 # 백엔드 연결 확인 화면
 
+## 현재 상태 (2026-10-27)
+
+백엔드 `GET /health`는 실행 저장소 main `b030df9`에 반영됐다. 이후 Mac에서 실제 Spring과 Next 서버를 함께 실행해 연결 성공·재확인·모바일 표시와 Spring 종료 후 실패 표시까지 확인했다.
+
+- 설치·현재 실행 방법: [프론트 README](../../../README.md), [백엔드 README](../../../../healthmith-backend/README.md).
+- 실제 Spring 연결 결과·환경·확인 범위: [Mac 실행 기록](../../../docs/mac-verification-2026-10-27.md).
+- 기존 자동 E2E는 시작 화면만 검사한다. 아래 fixture 검증과 후속 실제 Spring 실행은 각각 별도 기록이다.
+
+## 최초 화면 작업 당시 기록
+
+아래는 health 코드가 병합되기 전 Windows에서 수행한 작업 기록이다. 당시의 브랜치·미실행·미검증 항목을 보존했으며 현재 상태는 위 안내를 따른다.
+
 - 작업일: 2026-10-27 (Asia/Seoul)
 - 범위: 화면 영역 `src/app/`만 수정. 의존성·루트 설정·ignore·기존 README·백엔드 파일은 수정하지 않음.
 - 브랜치: `codex/frontend-backend-connection`.
 - 커밋·push: 수행하지 않음.
 
-## 연결 방식과 근거
+### 연결 방식과 근거
 
 시작 화면의 `백엔드 연결 확인` 링크로 `/backend-connection`에 진입한다.
 Next.js Server Component가 서버 측에서 `GET /health`를 호출한다.
@@ -18,7 +30,7 @@ Next.js Server Component가 서버 측에서 `GET /health`를 호출한다.
 - 로컬 기본 대상은 `http://127.0.0.1:8080`이다. `BACKEND_API_URL`로 변경할 수 있다. 이 변수는 서버 전용이며 `NEXT_PUBLIC_` 접두사를 사용하지 않는다.
 - 응답 계약은 `origin/feature/health-check`의 HealthController에서 확인했다: `GET /health` → `{"status":"UP"}`.
 - 같은 브랜치의 SecurityConfig는 GET /health를 인증 없이 허용한다. 다른 API의 인증은 이번 범위가 아니다.
-- 현재 main 및 작업 폴더에는 위 health 코드가 아직 없고 실행 중인 8080 서버·빌드 결과도 없었다. **실제 Spring 통합 성공은 아직 검증하지 않았다.**
+- 최초 작업 당시 main 및 작업 폴더에는 위 health 코드가 아직 없고 실행 중인 8080 서버·빌드 결과도 없었다. **그 단계에서는 실제 Spring 통합 성공을 검증하지 않았다.**
 
 설치된 Next.js의 공식 문서에서 다음 절을 읽었다.
 
@@ -27,7 +39,7 @@ Next.js Server Component가 서버 측에서 `GET /health`를 호출한다.
 - `node_modules/next/dist/docs/01-app/03-api-reference/04-functions/fetch.md`: options.cache, no-store.
 - `node_modules/next/dist/docs/01-app/02-guides/environment-variables.md`: Loading Environment Variables.
 
-## 직접 확인하는 방법
+### 직접 확인하는 방법
 
 백엔드 팀이 health-check 버전을 실행한 다음, 프론트 폴더에서 기존 설치 환경으로 실행한다.
 초기화·의존성 설치 명령은 필요하지 않다.
@@ -56,7 +68,7 @@ pnpm dev
 8080은 로컬 기본값의 예시이며 원격 배포 시에는 실제 백엔드 주소를 지정한다.
 이 문서의 실행 안내는 재현 절차이며 아래 실제 실행 결과와 구분한다.
 
-## 실제 실행한 명령과 결과
+### 실제 실행한 명령과 결과
 
 환경: Windows x64, Node.js 24.20.0, pnpm 11.25.0.
 
@@ -77,20 +89,20 @@ fixture의 성공을 실제 백엔드 통합 성공으로 기록하지 않는다
 브라우저 검증용 서버는 검사 후 종료했고, 캡처는 ignore된 `test-results/`에 남겼다.
 신규 검증을 위해 테스트 설정이나 다른 담당자의 테스트 파일을 변경하지 않았다.
 
-## 실패 후 수정한 것
+### 실패 후 수정한 것
 
 - 화면 링크 작성 스크립트가 PowerShell 예약 변수 HOME과 충돌했다. 변수명을 변경해 다시 실행했다.
 - 검증 스크립트의 `--experimental-default-type=module`은 현재 Node.js에서 지원하지 않아 종료 코드 9로 실패했다. 해당 옵션을 제거하고 `--input-type=module`로 다시 실행해 통과했다.
 - Node가 독립 TS 모듈 검증에서 MODULE_TYPELESS_PACKAGE_JSON 경고를 출력했다. 공유 package.json을 변경하지 않았으며 Next.js 빌드와 검증은 통과했다.
 
-## 실행하지 않은 것
+### 실행하지 않은 것
 
 - 실제 Spring Boot 서버 시작 및 실제 /health 통합 검증: 현재 작업 폴더에 endpoint가 없고 실행 중 서버도 없음.
 - macOS에서의 실행 확인.
 - 원격 CI.
 - 설치·초기화, 백엔드 파일 변경, 공유 설정 변경, 커밋·push.
 
-## 백엔드 팀에 필요한 확인
+### 당시 백엔드 팀에 필요했던 확인
 
 health-check 코드가 main에 반영되었거나 해당 버전으로 서버가 실행되어야 한다.
 `GET /health`가 인증 없이 HTTP 200과 `{"status":"UP"}`를 반환하는지 확인한다.
