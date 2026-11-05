@@ -92,7 +92,7 @@ export function parseSubmitResponse(status: number, body: unknown, sent: SurveyA
   if (status === 201) {
     const submission = parseSavedSurvey(body, sent);
     return submission
-      ? { state: "saved", submission, source: "server" }
+      ? { state: "saved", submission }
       : { state: "unknown", message: UNKNOWN_MESSAGE };
   }
 

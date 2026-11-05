@@ -47,7 +47,7 @@ export type ServerFieldError = { field: string; code: string; message: string };
 
 /** 제출 결과. 화면은 message 문장이 아니라 state·code로 분기한다. */
 export type SubmitResult =
-  | { state: "saved"; submission: SavedSurvey; source: "server" | "mock" }
+  | { state: "saved"; submission: SavedSurvey }
   | { state: "invalid"; message: string; fieldErrors: ServerFieldError[] }
   | { state: "unauthorized"; message: string }
   | { state: "save-failed"; message: string }

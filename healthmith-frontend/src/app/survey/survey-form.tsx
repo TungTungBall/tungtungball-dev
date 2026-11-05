@@ -29,7 +29,7 @@ const EMPTY_INPUT: SurveyFormInput = {
 const fieldClass = "space-y-3 rounded-2xl border border-[#DFE3F0] bg-white p-5";
 const legendClass = "px-1 text-base font-semibold text-[#202944]";
 const optionClass =
-  "flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-[#DFE3F0] px-3 text-sm has-checked:border-[#7355F5] has-checked:bg-[#ECE9FF] has-focus-visible:ring-2 has-focus-visible:ring-[#7355F5] has-disabled:cursor-not-allowed has-disabled:opacity-50";
+  "flex min-h-11 cursor-pointer items-center gap-2 whitespace-nowrap rounded-xl border border-[#DFE3F0] px-3 text-sm has-checked:border-[#7355F5] has-checked:bg-[#ECE9FF] has-focus-visible:ring-2 has-focus-visible:ring-[#7355F5] has-disabled:cursor-not-allowed has-disabled:opacity-50";
 
 function toggle(parts: BodyPart[], part: BodyPart): BodyPart[] {
   return parts.includes(part) ? parts.filter((item) => item !== part) : [...parts, part];
@@ -100,24 +100,18 @@ export function SurveyForm() {
     return (
       <section role="status" aria-labelledby="saved-title" className="space-y-4 rounded-2xl border border-[#DFE3F0] bg-white p-6">
         <h2 id="saved-title" className="text-lg font-bold text-[#202944]">
-          {result.source === "mock" ? "임시 응답을 받았어요" : "사전조사 내용을 저장했어요"}
+          사전조사 내용을 저장했어요
         </h2>
-        {result.source === "mock" ? (
-          <p className="rounded-lg bg-[#FFF0F5] px-3 py-2 text-sm text-[#AA4265]">
-            서버에 연결하기 전 임시 응답입니다. 실제로 저장되지 않았어요.
-          </p>
-        ) : (
-          <p className="text-sm text-[#717C95]">
-            맞춤 운동 초안은 아직 만들지 않았어요. 초안 만들기는 다음 기능에서 이어집니다.
-          </p>
-        )}
+        <p className="text-sm text-[#717C95]">
+          맞춤 운동 초안은 아직 만들지 않았어요. 초안 만들기는 다음 기능에서 이어집니다.
+        </p>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
           <dt className="text-[#717C95]">우선 부위</dt>
           <dd>{saved.answers.priority_body_parts.join(" → ")}</dd>
           <dt className="text-[#717C95]">강도</dt>
           <dd>{saved.answers.intensity}</dd>
           <dt className="text-[#717C95]">저장 시각</dt>
-          <dd>{saved.created_at}</dd>
+          <dd>{new Date(saved.created_at).toLocaleString("ko-KR")}</dd>
         </dl>
         <button
           type="button"
@@ -203,7 +197,12 @@ export function SurveyForm() {
                   aria-invalid={errors.priorityParts ? true : undefined}
                 />
                 {part}
-                {rank >= 0 && <span className="ml-auto text-xs font-semibold text-[#7355F5]">{rank + 1}순위</span>}
+                {rank >= 0 && (
+                  <span className="ml-auto inline-flex size-6 items-center justify-center rounded-full bg-[#7355F5] text-xs font-semibold text-white">
+                    {rank + 1}
+                    <span className="sr-only">순위</span>
+                  </span>
+                )}
               </label>
             );
           })}
