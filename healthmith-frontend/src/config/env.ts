@@ -7,3 +7,19 @@ const DEFAULT_BACKEND_API_URL = "http://127.0.0.1:8080";
 export function getBackendApiUrl(): string {
   return process.env.BACKEND_API_URL ?? DEFAULT_BACKEND_API_URL;
 }
+
+export type SupabaseAuthConfig = {
+  url: string;
+  publishableKey: string;
+};
+
+/**
+ * 로그인 세션을 읽을 Supabase 설정. 백엔드와 같은 이름을 쓴다.
+ * 둘 중 하나라도 비어 있으면 null을 돌려주고, 호출한 쪽은 '세션 없음'으로 처리한다.
+ */
+export function getSupabaseAuthConfig(): SupabaseAuthConfig | null {
+  const url = process.env.SUPABASE_URL?.trim();
+  const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY?.trim();
+  if (!url || !publishableKey) return null;
+  return { url, publishableKey };
+}
