@@ -19,7 +19,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
-public class SurveySubmissionClient {
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name="app.persistence.mode", havingValue="postgrest")
+public class SurveySubmissionClient implements tungtungball.healthmithbackend.repository.SurveySubmissionStore {
     private final WebClient webClient;
 
     public SurveySubmissionClient(@Qualifier("supabaseWebClient") WebClient webClient, JsonMapper mapper) {

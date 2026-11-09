@@ -4,7 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import tungtungball.healthmithbackend.client.SurveySubmissionClient;
+import tungtungball.healthmithbackend.repository.SurveySubmissionStore;
 import tungtungball.healthmithbackend.config.error.ApiException;
 import tungtungball.healthmithbackend.dto.SurveySubmissionDetailResponse;
 import tungtungball.healthmithbackend.dto.SurveySubmissionUpdateRequest;
@@ -14,10 +14,10 @@ import java.util.UUID;
 
 @Service
 public class SurveySubmissionUpdateService {
-    private final SurveySubmissionClient client;
+    private final SurveySubmissionStore client;
     private final SurveyValidationService validation;
 
-    public SurveySubmissionUpdateService(SurveySubmissionClient client, SurveyValidationService validation) {
+    public SurveySubmissionUpdateService(SurveySubmissionStore client, SurveyValidationService validation) {
         this.client = client;
         this.validation = validation;
     }
