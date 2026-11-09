@@ -23,6 +23,7 @@ public abstract class PostgresIntegrationSupport {
             for (Path path : paths.filter(p -> p.toString().endsWith(".sql")).sorted().toList()) {
                 ADMIN.sql(Files.readString(path)).then().block(Duration.ofSeconds(30));
             }
+            ADMIN.sql(Files.readString(Path.of("../supabase/roles/r2dbc.sql"))).then().block(Duration.ofSeconds(30));
         } catch (Exception error) { throw new ExceptionInInitializerError(error); }
     }
 
@@ -36,5 +37,8 @@ public abstract class PostgresIntegrationSupport {
         // 같은 행의 경합도 DB에서 검사하도록 여러 연결을 허용한다.
         registry.add("spring.r2dbc.pool.max-size", () -> "4");
         registry.add("spring.r2dbc.pool.initial-size", () -> "0");
+        registry.add("app.worker-database.url", () -> "r2dbc:postgresql://" + POSTGRES.getHost() + ":" + POSTGRES.getMappedPort(5432) + "/" + POSTGRES.getDatabaseName());
+        registry.add("app.worker-database.username", () -> "healthmith_worker");
+        registry.add("app.worker-database.password", () -> "isolated-worker-password");
     }
 }

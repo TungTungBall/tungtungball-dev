@@ -10,3 +10,5 @@ $$ SELECT nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
 GRANT USAGE ON SCHEMA auth, public TO authenticated;
 GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated;
 INSERT INTO auth.users VALUES ('20000000-0000-4000-8000-000000000001'), ('20000000-0000-4000-8000-000000000002');
+
+CREATE ROLE healthmith_worker LOGIN PASSWORD 'isolated-worker-password' NOINHERIT;
