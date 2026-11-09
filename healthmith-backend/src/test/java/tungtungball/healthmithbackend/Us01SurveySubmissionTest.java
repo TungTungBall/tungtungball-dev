@@ -163,6 +163,15 @@ class Us01SurveySubmissionTest {
         expectInvalidInput(answers, "answers.purpose.type");
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"다이어트", "체력 ", "", "기타"})
+    @DisplayName("US-01 (실패·거절) 허용 목록 밖의 운동 목적은 입력 오류로 거절한다")
+    void unknownPurposeIsRejected(String type) {
+        // 오류 주입 시험(목적 허용 목록 검사 제거)을 기존 테스트가 잡지 못해 추가했다. first-feature.md 3절.
+        expectInvalidInput(validAnswers(NO_LIMITATIONS, purpose(type, "null"), "5", PRIORITY_PARTS),
+                "answers.purpose.type");
+    }
+
     @Test
     @DisplayName("US-01 (실패·거절) 자유 입력 목적이 공백뿐이면 입력 오류로 거절한다")
     void blankFreeTextPurposeIsRejected() {
