@@ -47,6 +47,12 @@ commit/rollback 때 해제한다. 요청 본문의 소유자나 서명 검증 �
 별도 PostgreSQL 17 컨테이너와 제한된 로그인으로 실행한다. Docker 실행 환경이 필요하다.
 운영 Supabase, 실제 Gemini, 실제 카메라·손 인식·부하는 별도 검증 대상이다.
 
+백엔드 또는 `supabase/`가 바뀐 PR은 `.github/workflows/backend.yml`에서도 같은 검사를 실행한다.
+CI는 JDK 21과 Docker를 사용하고 실제 PostgreSQL 17 컨테이너를 테스트가 직접 준비한다.
+외부 서비스의 비밀 값은 필요하지 않다. JUnit XML에 실패·오류·생략이 있거나 검사 결과가 없으면
+성공으로 처리하지 않는다. 결과 합계는 실행 요약, HTML·XML은 7일간 Actions artifact에서 확인한다.
+로컬에서도 Gradle 실행 뒤 `python3 scripts/check-test-results.py`로 합계를 확인할 수 있다.
+
 기술 근거: [Spring Data R2DBC](https://docs.spring.io/spring-data/relational/reference/r2dbc/repositories.html),
 [Spring R2DBC 트랜잭션](https://docs.spring.io/spring-framework/reference/data-access/r2dbc.html).
 
