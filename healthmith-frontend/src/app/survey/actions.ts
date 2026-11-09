@@ -7,7 +7,7 @@ import { postSurvey } from "./submit";
 import type { SubmitResult } from "./types";
 import { parseFormInput, validateSurvey } from "./validation";
 
-const SIGN_IN_REQUIRED = "로그인이 필요해요. 로그인 기능은 준비 중이라 지금은 저장할 수 없어요.";
+const SIGN_IN_REQUIRED = "로그인이 필요해요. Google로 로그인한 뒤 다시 저장해 주세요.";
 
 /**
  * 사전조사 제출 Server Function.

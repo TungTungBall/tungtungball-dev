@@ -23,3 +23,19 @@ export function getSupabaseAuthConfig(): SupabaseAuthConfig | null {
   if (!url || !publishableKey) return null;
   return { url, publishableKey };
 }
+
+/** OAuth 복귀 주소는 배포 설정으로 고정한다. 요청의 Host/X-Forwarded-Host를 신뢰하지 않는다. */
+export function getAppOrigin(): string | null {
+  const configured = process.env.APP_URL?.trim();
+  const value = configured || (process.env.NODE_ENV === "production" ? null : "http://localhost:3000");
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    if (url.username || url.password || url.search || url.hash || url.pathname !== "/") return null;
+    const local = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+    if (url.protocol !== "https:" && !(local && url.protocol === "http:")) return null;
+    return url.origin;
+  } catch {
+    return null;
+  }
+}
