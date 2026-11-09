@@ -7,7 +7,7 @@ on:
       - "supabase/**"
       - ".github/workflows/backend.yml"
   push:
-    branches: [main, "feature/**", "codex/**"]
+    branches: [main, "codex/**"]
     paths:
       - "healthmith-backend/**"
       - "supabase/**"
