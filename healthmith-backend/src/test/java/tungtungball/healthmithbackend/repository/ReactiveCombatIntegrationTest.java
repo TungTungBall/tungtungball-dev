@@ -86,6 +86,76 @@ class ReactiveCombatIntegrationTest extends ReactiveApiIntegrationSupport {
     }
 
     @Test
+    void changedReplayAndStaleSequenceDoNotSpendManaOrAppendEvents() {
+        String gem = earnedGem();
+        JsonNode battle = post("/api/pve-battles", Map.of("gem_id", gem, "encounter_id", "TEST_NPC"), 201);
+        String path = "/api/battles/" + battle.path("id").asString();
+        post(path + "/ready", Map.of("expected_version", battle.path("version")), 200);
+        String key = UUID.randomUUID().toString();
+        var cast = Map.of("client_cast_id", key, "client_sequence", 1, "spell_id", "TEST_BOLT",
+                "rune_template_version", "test-v1", "drawing", testDrawing(false));
+        JsonNode receipt = request(A, HttpMethod.POST, path + "/casts", cast, key, 200);
+        assertEquals("applied", receipt.path("status").asString());
+        JsonNode after = get(path);
+
+        JsonNode changed = request(A, HttpMethod.POST, path + "/casts",
+                Map.of("client_cast_id", key, "client_sequence", 1, "spell_id", "TEST_BOLT",
+                        "rune_template_version", "test-v1", "drawing", testDrawing(true)), key, 409);
+        assertEquals("IDEMPOTENCY_CONFLICT", changed.path("code").asString());
+        String staleKey = UUID.randomUUID().toString();
+        JsonNode stale = request(A, HttpMethod.POST, path + "/casts",
+                Map.of("client_cast_id", staleKey, "client_sequence", 1, "spell_id", "TEST_BOLT",
+                        "rune_template_version", "test-v1", "drawing", testDrawing(false)), staleKey, 409);
+        assertEquals("CAST_SEQUENCE_CONFLICT", stale.path("code").asString());
+
+        assertEquals(receipt, request(A, HttpMethod.POST, path + "/casts", cast, key, 200));
+        assertEquals(after, get(path));
+        assertEquals(1L, ADMIN.sql("SELECT count(*) AS n FROM private.cast_receipts WHERE battle_id=:id")
+                .bind("id", UUID.fromString(battle.path("id").asString()))
+                .map((row, metadata) -> row.get("n", Long.class)).one().block(Duration.ofSeconds(10)));
+    }
+
+    @Test
+    void absentRulesetDoesNotLockTheGemOrCreateAMatch() {
+        String gem = earnedGem();
+        ADMIN.sql("UPDATE public.combat_rulesets SET enabled=false WHERE version='test-v1'").then().block(Duration.ofSeconds(10));
+        try {
+            JsonNode pve = request(A, HttpMethod.POST, "/api/pve-battles", Map.of("gem_id", gem, "encounter_id", "TEST_NPC"), UUID.randomUUID().toString(), 503);
+            assertEquals("POLICY_NOT_CONFIGURED", pve.path("code").asString());
+            JsonNode match = request(A, HttpMethod.POST, "/api/pvp-matchmaking-tickets", Map.of("gem_id", gem), UUID.randomUUID().toString(), 503);
+            assertEquals("POLICY_NOT_CONFIGURED", match.path("code").asString());
+            assertEquals("available", get("/api/gems/" + gem).path("availability").asString());
+            assertTrue(get("/api/pvp-matchmaking-tickets/current").path("ticket").isNull());
+            assertTrue(get("/api/me/battles/current").path("battle").isNull());
+        } finally {
+            ADMIN.sql("UPDATE public.combat_rulesets SET enabled=true WHERE version='test-v1'").then().block(Duration.ofSeconds(10));
+        }
+    }
+
+    @Test
+    void workerExpiresAnUnmatchedTicketAndUnlocksItsGem() {
+        String gem = earnedGem();
+        JsonNode ticket = post("/api/pvp-matchmaking-tickets", Map.of("gem_id", gem), 201);
+        assertEquals("reserved", get("/api/gems/" + gem).path("availability").asString());
+        ADMIN.sql("UPDATE public.matchmaking_tickets SET created_at=now()-interval '1 day' WHERE id=:id")
+                .bind("id", UUID.fromString(ticket.path("id").asString())).then().block(Duration.ofSeconds(10));
+
+        worker.combatTick().block(Duration.ofSeconds(10));
+        JsonNode expired = get("/api/pvp-matchmaking-tickets/" + ticket.path("id").asString());
+        assertEquals("expired", expired.path("status").asString());
+        assertEquals(ticket.path("version").asLong() + 1, expired.path("version").asLong());
+        assertEquals("available", get("/api/gems/" + gem).path("availability").asString());
+        assertTrue(get("/api/pvp-matchmaking-tickets/current").path("ticket").isNull());
+        assertTrue(get("/api/me/battles/current").path("battle").isNull());
+    }
+
+    private Map<String, Object> testDrawing(boolean reverse) {
+        return Map.of("canvas_width", 100, "canvas_height", 100, "strokes", List.of(Map.of("points",
+                List.of(Map.of("x", reverse ? 1.0 : 0.0, "y", reverse ? 1.0 : 0.0, "t_ms", 0),
+                        Map.of("x", reverse ? 0.0 : 1.0, "y", reverse ? 0.0 : 1.0, "t_ms", 100)))));
+    }
+
+    @Test
     void pvpTicketCancelMatchAndParticipantResultsUseAtomicCommands() {
         String gemA = earnedGem();
         activeUser = B;
