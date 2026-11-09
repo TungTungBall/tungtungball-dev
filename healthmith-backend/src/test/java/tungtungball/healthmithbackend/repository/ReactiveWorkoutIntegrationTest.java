@@ -105,6 +105,76 @@ class ReactiveWorkoutIntegrationTest extends PostgresIntegrationSupport {
     }
 
     @Test
+    void unconfirmedOrStaleStartDoesNotCreateAWorkout() {
+        JsonNode draft = generatedCurriculum();
+        String cid = draft.path("id").asString();
+        JsonNode refused = request(A, HttpMethod.POST, "/api/workout-sessions",
+                Map.of("curriculum_id", cid, "expected_curriculum_version", draft.path("version")), UUID.randomUUID().toString(), 409);
+        assertEquals("INVALID_STATE", refused.path("code").asString());
+        assertTrue(get("/api/workout-sessions/current").path("session").isNull());
+
+        JsonNode confirmed = post("/api/curricula/" + cid + "/confirmations", Map.of("expected_version", draft.path("version")), 200);
+        JsonNode stale = request(A, HttpMethod.POST, "/api/workout-sessions",
+                Map.of("curriculum_id", cid, "expected_curriculum_version", draft.path("version")), UUID.randomUUID().toString(), 409);
+        assertEquals("VERSION_CONFLICT", stale.path("code").asString());
+        assertTrue(get("/api/workout-sessions/current").path("session").isNull());
+
+        JsonNode session = post("/api/workout-sessions",
+                Map.of("curriculum_id", cid, "expected_curriculum_version", confirmed.path("version")), 201);
+        request(A, HttpMethod.POST, "/api/workout-sessions",
+                Map.of("curriculum_id", cid, "expected_curriculum_version", confirmed.path("version")), UUID.randomUUID().toString(), 409);
+        assertEquals(session, get("/api/workout-sessions/" + session.path("id").asString()));
+        assertEquals(1L, ADMIN.sql("SELECT count(*) AS n FROM public.workout_sessions")
+                .map((row, metadata) -> row.get("n", Long.class)).one().block(Duration.ofSeconds(10)));
+    }
+
+    @Test
+    void foreignUserCannotConfirmStartOrChangeAnotherUsersWorkout() {
+        JsonNode draft = generatedCurriculum();
+        String cid = draft.path("id").asString();
+        request(B, HttpMethod.POST, "/api/curricula/" + cid + "/confirmations",
+                Map.of("expected_version", draft.path("version")), UUID.randomUUID().toString(), 404);
+        assertEquals(draft, get("/api/curricula/" + cid));
+        JsonNode confirmed = post("/api/curricula/" + cid + "/confirmations", Map.of("expected_version", draft.path("version")), 200);
+        request(B, HttpMethod.POST, "/api/workout-sessions",
+                Map.of("curriculum_id", cid, "expected_curriculum_version", confirmed.path("version")), UUID.randomUUID().toString(), 404);
+        JsonNode session = post("/api/workout-sessions",
+                Map.of("curriculum_id", cid, "expected_curriculum_version", confirmed.path("version")), 201);
+        String path = "/api/workout-sessions/" + session.path("id").asString();
+        request(B, HttpMethod.POST, path + "/repetitions", Map.of("event_id", UUID.randomUUID().toString(),
+                "stage_index", 1, "expected_version", session.path("version")), null, 404);
+        request(B, HttpMethod.POST, path + "/pause",
+                Map.of("expected_version", session.path("version"), "reason", "manual"), UUID.randomUUID().toString(), 404);
+        assertEquals(session, get(path));
+        assertEquals(0, get("/api/me/gems").path("items").size());
+    }
+
+    @Test
+    void wrongStageStaleVersionAndPausedRepetitionsLeaveProgressUnchanged() {
+        JsonNode draft = generatedCurriculum();
+        String cid = draft.path("id").asString();
+        JsonNode confirmed = post("/api/curricula/" + cid + "/confirmations", Map.of("expected_version", draft.path("version")), 200);
+        JsonNode session = post("/api/workout-sessions",
+                Map.of("curriculum_id", cid, "expected_curriculum_version", confirmed.path("version")), 201);
+        String path = "/api/workout-sessions/" + session.path("id").asString();
+        JsonNode wrongStage = request(A, HttpMethod.POST, path + "/repetitions", Map.of("event_id", UUID.randomUUID().toString(),
+                "stage_index", 2, "expected_version", session.path("version")), null, 409);
+        assertEquals("INVALID_STATE", wrongStage.path("code").asString());
+        JsonNode stale = request(A, HttpMethod.POST, path + "/repetitions", Map.of("event_id", UUID.randomUUID().toString(),
+                "stage_index", 1, "expected_version", session.path("version").asLong() + 1), null, 409);
+        assertEquals("VERSION_CONFLICT", stale.path("code").asString());
+        assertEquals(session, get(path));
+
+        JsonNode paused = post(path + "/pause", Map.of("expected_version", session.path("version"), "reason", "manual"), 200);
+        request(A, HttpMethod.POST, path + "/repetitions", Map.of("event_id", UUID.randomUUID().toString(),
+                "stage_index", 1, "expected_version", paused.path("version")), null, 409);
+        assertEquals(paused, get(path));
+        assertEquals(0L, ADMIN.sql("SELECT count(*) AS n FROM private.workout_events")
+                .map((row, metadata) -> row.get("n", Long.class)).one().block(Duration.ofSeconds(10)));
+        assertEquals(0, get("/api/me/gems").path("items").size());
+    }
+
+    @Test
     void fullWorkoutFeedbackAndSummaryFlowUsesR2dbcAndRestrictedWorker() {
         JsonNode session = completedWorkout();
         String path = "/api/workout-sessions/" + session.path("id").asString() + "/feedback";
