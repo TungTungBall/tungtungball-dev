@@ -34,7 +34,8 @@ public abstract class PostgresIntegrationSupport {
                 + POSTGRES.getMappedPort(5432) + "/" + POSTGRES.getDatabaseName());
         registry.add("spring.r2dbc.username", () -> "healthmith_app");
         registry.add("spring.r2dbc.password", () -> "isolated-test-password");
-        registry.add("spring.r2dbc.pool.max-size", () -> "1");
+        // 같은 행의 경합도 DB에서 검사하도록 여러 연결을 허용한다.
+        registry.add("spring.r2dbc.pool.max-size", () -> "4");
         registry.add("spring.r2dbc.pool.initial-size", () -> "0");
         registry.add("app.worker-database.url", () -> "r2dbc:postgresql://" + POSTGRES.getHost() + ":" + POSTGRES.getMappedPort(5432) + "/" + POSTGRES.getDatabaseName());
         registry.add("app.worker-database.username", () -> "healthmith_worker");
