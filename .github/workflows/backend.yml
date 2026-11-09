@@ -1,0 +1,58 @@
+name: Backend checks
+
+on:
+  pull_request:
+    paths:
+      - "healthmith-backend/**"
+      - "supabase/**"
+      - ".github/workflows/backend.yml"
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "healthmith-backend/**"
+      - "supabase/**"
+      - ".github/workflows/backend.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: healthmith-backend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+          cache-dependency-path: |
+            healthmith-backend/*.gradle
+            healthmith-backend/gradle/wrapper/gradle-wrapper.properties
+      - name: Check Docker
+        run: docker info
+      - name: Tests and executable jar
+        id: verify
+        run: ./gradlew clean test bootJar --no-daemon --console=plain
+      - name: Check test totals
+        if: always() && steps.verify.outcome != 'skipped'
+        run: python3 scripts/check-test-results.py
+      - name: Save test reports
+        if: always() && steps.verify.outcome != 'skipped'
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-test-reports
+          path: |
+            healthmith-backend/build/reports/tests/test/
+            healthmith-backend/build/test-results/test/TEST-*.xml
+          if-no-files-found: error
+          retention-days: 7
