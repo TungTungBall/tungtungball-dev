@@ -6,8 +6,9 @@ import java.time.Duration;
 
 @ConfigurationProperties("combat.worker")
 public record CombatWorkerProperties(@DefaultValue("false") boolean enabled,String serviceKey,Duration pollInterval,Duration requestTimeout) {
-    public void validateEnabled() {
-        if (enabled && (serviceKey==null || serviceKey.isBlank() || pollInterval==null || pollInterval.isNegative() || pollInterval.isZero() || requestTimeout==null || requestTimeout.isNegative() || requestTimeout.isZero())) {
+    public void validateEnabled() { validateEnabled(false); }
+    public void validateEnabled(boolean directDatabase) {
+        if (enabled && ((!directDatabase && (serviceKey==null || serviceKey.isBlank())) || pollInterval==null || pollInterval.isNegative() || pollInterval.isZero() || requestTimeout==null || requestTimeout.isNegative() || requestTimeout.isZero())) {
             throw new IllegalStateException("전투 worker 운영 설정이 필요합니다.");
         }
     }

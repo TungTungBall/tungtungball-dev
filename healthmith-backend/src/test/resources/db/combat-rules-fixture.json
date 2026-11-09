@@ -1,0 +1,75 @@
+{
+  "command_order": "serialized",
+  "match_selector": "fifo",
+  "recognition_algorithm": "ordered_path_v1",
+  "size_metric": "bounding_box_area",
+  "power_band_policy": "first_match",
+  "mana_regeneration": "none",
+  "unlock_policy": "all_catalog_spells",
+  "npc_catchup": "skip_missed",
+  "initial_hp": 100,
+  "initial_mana": 100,
+  "slot_limit": 2,
+  "samples_per_stroke": 8,
+  "match_timeout_ms": 60000,
+  "ready_timeout_ms": 60000,
+  "battle_timeout_ms": 300000,
+  "event_poll_interval_ms": 10,
+  "event_batch_size": 100,
+  "max_effect_amount": 100,
+  "max_canvas_dimension": 2000,
+  "max_casts_per_window": 100,
+  "cast_window_ms": 1000,
+  "distance_scale": 1,
+  "max_power_multiplier": 1,
+  "battle_timeout_outcome": "draw",
+  "drawing_limits": {
+    "max_strokes": 2,
+    "max_points_per_cast": 50,
+    "max_duration_ms": 10000,
+    "max_body_bytes": 16384
+  },
+  "default_spell_ids": [
+    "TEST_BOLT"
+  ],
+  "spells": [
+    {
+      "id": "TEST_BOLT",
+      "display_name": "테스트 주문",
+      "category": "attack",
+      "target": "opponent",
+      "rune_template_version": "test-v1",
+      "guide": {
+        "kind": "test",
+        "instruction": "테스트 선"
+      },
+      "template": [
+        {
+          "points": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 1
+            }
+          ]
+        }
+      ],
+      "recognition_min_score": 0.9,
+      "base_mana_cost": 10,
+      "cooldown_ms": 0,
+      "base_amount": 10,
+      "power_bands": [
+        {
+          "min_accuracy": 0.9,
+          "max_accuracy": 1,
+          "min_size": 0,
+          "max_size": 1,
+          "multiplier": 1
+        }
+      ]
+    }
+  ]
+}

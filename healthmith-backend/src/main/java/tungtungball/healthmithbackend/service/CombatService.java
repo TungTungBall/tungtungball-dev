@@ -5,6 +5,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.http.codec.ServerSentEvent;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import tungtungball.healthmithbackend.repository.CombatStore;
 import tools.jackson.databind.json.JsonMapper;
 import tungtungball.healthmithbackend.client.CombatClient;
 import tungtungball.healthmithbackend.config.error.ApiException;
@@ -18,9 +19,9 @@ import java.util.Base64;
 
 @Service
 public class CombatService {
-    private final CombatClient client;
+    private final CombatStore client;
     private final JsonMapper mapper;
-    public CombatService(CombatClient client,JsonMapper mapper) { this.client=client;this.mapper=mapper; }
+    public CombatService(CombatStore client,JsonMapper mapper) { this.client=client;this.mapper=mapper; }
     public <T> Mono<T> command(String operation,String id,String key,Object payload,Jwt jwt,Class<T> type) {
         return Mono.defer(() -> {
             owner(jwt);UUID requestKey=uuid(key);

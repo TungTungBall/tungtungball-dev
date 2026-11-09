@@ -7,7 +7,8 @@ import tungtungball.healthmithbackend.config.CombatWorkerProperties;
 import tungtungball.healthmithbackend.config.SupabaseProperties;
 
 @Component
-public class CombatWorkerClient {
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name="app.persistence.mode", havingValue="postgrest")
+public class CombatWorkerClient implements tungtungball.healthmithbackend.repository.CombatWorkerStore {
     private final SupabaseProperties supabase;
     private final CombatWorkerProperties properties;
     public CombatWorkerClient(SupabaseProperties supabase,CombatWorkerProperties properties) { this.supabase=supabase;this.properties=properties; }

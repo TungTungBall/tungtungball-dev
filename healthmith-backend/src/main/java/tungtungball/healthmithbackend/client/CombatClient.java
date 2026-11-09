@@ -16,7 +16,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
-public class CombatClient {
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name="app.persistence.mode", havingValue="postgrest")
+public class CombatClient implements tungtungball.healthmithbackend.repository.CombatStore {
     private final WebClient client;
     private final JsonMapper mapper;
     public CombatClient(@Qualifier("supabaseWebClient") WebClient client, JsonMapper mapper) {
