@@ -21,7 +21,9 @@ public class DatabaseCommands {
             "change_workout_state", "p_session_id:uuid,p_expected_version:bigint,p_command:text,p_reason:text,p_idempotency_key:uuid",
             "journey_command", "p_operation:text,p_resource_id:uuid,p_key:uuid,p_payload:jsonb",
             "journey_query", "p_operation:text,p_resource_id:uuid,p_payload:jsonb",
-            "generation_workflow", "p_operation:text,p_resource_id:uuid,p_key:uuid,p_payload:jsonb"
+            "generation_workflow", "p_operation:text,p_resource_id:uuid,p_key:uuid,p_payload:jsonb",
+            "combat_command", "p_operation:text,p_resource_id:uuid,p_key:uuid,p_payload:jsonb",
+            "combat_query", "p_operation:text,p_resource_id:uuid,p_payload:jsonb"
     );
     private final UserDatabase database;
     private final JsonMapper mapper;

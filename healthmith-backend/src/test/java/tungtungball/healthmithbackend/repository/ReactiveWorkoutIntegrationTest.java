@@ -20,90 +20,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.*;
 
 @SpringBootTest
-class ReactiveWorkoutIntegrationTest extends PostgresIntegrationSupport {
-    static final String A = "20000000-0000-4000-8000-000000000001";
-    static final String B = "20000000-0000-4000-8000-000000000002";
-    @Autowired ApplicationContext context;
-    @Autowired JsonMapper mapper;
-    @Autowired WorkerDatabase worker;
-    WebTestClient http;
-    UUID workerId;
-
-    @BeforeEach
-    void setUp() throws Exception {
-        ADMIN.sql(Files.readString(Path.of("src/test/resources/db/workout-fixtures.sql"))).then().block(Duration.ofSeconds(10));
-        workerId = UUID.randomUUID();
-        worker.generation("poll", workerId, 300, Map.of()).block(Duration.ofSeconds(10));
-        http = WebTestClient.bindToApplicationContext(context).apply(springSecurity()).configureClient().build();
-    }
-
-    JsonNode request(String user, HttpMethod method, String path, Object body, String key, int status) {
-        var request = http.mutateWith(mockJwt().jwt(jwt -> jwt.subject(user))).method(method).uri(path);
-        if (key != null) { request.header("Idempotency-Key", key); }
-        if (body != null) { request.contentType(MediaType.APPLICATION_JSON).bodyValue(mapper.writeValueAsString(body)); }
-        return mapper.readTree(request.exchange().expectStatus().isEqualTo(status).expectBody(String.class).returnResult().getResponseBody());
-    }
-
-    JsonNode get(String path) { return request(A, HttpMethod.GET, path, null, null, 200); }
-    JsonNode post(String path, Object body, int status) {
-        return request(A, HttpMethod.POST, path, body, UUID.randomUUID().toString(), status);
-    }
-    JsonNode answers() {
-        return mapper.readTree("""
-            {"physical_limitations":{"present":false,"body_parts":[]},"purpose":{"type":"체력","custom_text":null},"intensity":5,"priority_body_parts":["하체","상체"]}
-            """);
-    }
-
-    JsonNode generatedCurriculum() {
-        JsonNode survey = post("/api/survey-submissions", Map.of("answers", answers()), 201);
-        String submission = survey.path("id").asString();
-        get("/api/survey-submissions/" + submission);
-        request(A, HttpMethod.PATCH, "/api/survey-submissions/" + submission,
-                Map.of("answers", answers(), "expected_version", 1), UUID.randomUUID().toString(), 200);
-        assertEquals("TEST_EX", get("/api/exercises").path("items").get(0).path("id").asString());
-        String key = UUID.randomUUID().toString();
-        JsonNode job = request(A, HttpMethod.POST, "/api/curriculum-generation-requests", Map.of("survey_submission_id", submission), key, 202);
-        assertEquals(job, request(A, HttpMethod.POST, "/api/curriculum-generation-requests", Map.of("survey_submission_id", submission), key, 202));
-        request(B, HttpMethod.GET, "/api/curriculum-generation-requests/" + job.path("id").asString(), null, null, 404);
-        JsonNode claimed = worker.generation("poll", workerId, 300, Map.of()).block();
-        var stages = mapper.createArrayNode();
-        String[] names = {"광석 채굴", "광석 쪼개기", "광석 세척", "광석 가공", "보석 연마"};
-        for (int i = 0; i < 5; i++) {
-            stages.addObject().put("stage_index", i + 1).put("stage_name", names[i]).put("exercise_id", "TEST_EX")
-                    .put("exercise_name", "테스트 운동").put("target_repetitions", 1).put("pace_instruction", "테스트 속도")
-                    .put("internal_focus_instruction", "테스트 집중 안내");
-        }
-        assertTrue(worker.generation("publish_curriculum", workerId, 300,
-                Map.of("request_id", claimed.path("request_id"), "lease_token", claimed.path("lease_token"), "stages", stages)).block().asBoolean());
-        JsonNode completed = get("/api/curriculum-generation-requests/" + job.path("id").asString());
-        assertEquals("succeeded", completed.path("status").asString());
-        return get("/api/curricula/" + completed.path("curriculum_id").asString());
-    }
-
-    JsonNode completedWorkout() {
-        JsonNode curriculum = generatedCurriculum();
-        String cid = curriculum.path("id").asString();
-        JsonNode confirmed = post("/api/curricula/" + cid + "/confirmations", Map.of("expected_version", curriculum.path("version")), 200);
-        JsonNode session = post("/api/workout-sessions", Map.of("curriculum_id", cid, "expected_curriculum_version", confirmed.path("version")), 201);
-        String id = session.path("id").asString();
-        JsonNode paused = post("/api/workout-sessions/" + id + "/pause", Map.of("expected_version", session.path("version"), "reason", "manual"), 200);
-        session = post("/api/workout-sessions/" + id + "/resume", Map.of("expected_version", paused.path("version")), 200);
-        assertEquals(id, get("/api/workout-sessions/current").path("session").path("id").asString());
-        get("/api/workout-sessions/" + id);
-        Object last = null;
-        for (int stage = 1; stage <= 5; stage++) {
-            last = Map.of("event_id", UUID.randomUUID().toString(), "stage_index", stage, "expected_version", session.path("version"));
-            session = post("/api/workout-sessions/" + id + "/repetitions", last, 200).path("session");
-        }
-        assertEquals("completed", session.path("status").asString());
-        assertFalse(post("/api/workout-sessions/" + id + "/repetitions", last, 200).path("event_applied").asBoolean());
-        assertTrue(get("/api/workout-sessions/current").path("session").isNull());
-        JsonNode result = get("/api/workout-sessions/" + id + "/result");
-        get("/api/gems/" + result.path("gem").path("id").asString());
-        assertEquals(1, get("/api/me/gems").path("items").size());
-        return session;
-    }
-
+class ReactiveWorkoutIntegrationTest extends ReactiveApiIntegrationSupport {
+    @Autowired JourneyStore journey;
     @Test
     void unconfirmedOrStaleStartDoesNotCreateAWorkout() {
         JsonNode draft = generatedCurriculum();
@@ -184,6 +102,8 @@ class ReactiveWorkoutIntegrationTest extends PostgresIntegrationSupport {
         assertEquals(1, get("/api/me/workout-stats").path("completed_sessions").asInt());
         assertEquals(1, get("/api/me/workout-records").path("items").size());
         get(path);
+        post("/api/feedback/" + saved.path("feedback").path("id").asString() + "/next-curriculum-generation-requests", Map.of(), 202);
+        post("/api/me/workout-tendency/generation-requests", Map.of(), 202);
         JsonNode next = worker.generation("poll", workerId, 300, Map.of()).block();
         assertEquals("curriculum", next.path("kind").asString());
         worker.generation("fail", workerId, 300, Map.of("request_id", next.path("request_id"), "lease_token", next.path("lease_token"), "kind", "curriculum", "code", "LLM_UNAVAILABLE")).block();
@@ -193,5 +113,41 @@ class ReactiveWorkoutIntegrationTest extends PostgresIntegrationSupport {
         assertEquals("테스트 요약", get("/api/me/workout-tendency").path("summary").asString());
         get("/api/workout-tendency-generation-requests/" + summary.path("request_id").asString());
         request(B, HttpMethod.GET, "/api/workout-sessions/" + session.path("id").asString(), null, null, 404);
+    }
+
+    @Test
+    void regenerationFailureAndAbandonNeverIssueGemOrFeedback() {
+        JsonNode old = generatedCurriculum();
+        String cid = old.path("id").asString();
+        post("/api/curricula/" + cid + "/regenerations", Map.of("expected_version", old.path("version")), 202);
+        assertEquals("rejected", get("/api/curricula/" + cid).path("status").asString());
+        JsonNode claim = worker.generation("poll", workerId, 300, Map.of()).block();
+        worker.generation("fail", workerId, 300, Map.of("request_id", claim.path("request_id"), "lease_token", claim.path("lease_token"), "kind", "curriculum", "code", "LLM_UNAVAILABLE")).block();
+        JsonNode fresh = generatedCurriculum();
+        JsonNode confirmed = post("/api/curricula/" + fresh.path("id").asString() + "/confirmations", Map.of("expected_version", fresh.path("version")), 200);
+        JsonNode session = post("/api/workout-sessions", Map.of("curriculum_id", fresh.path("id"), "expected_curriculum_version", confirmed.path("version")), 201);
+        String path = "/api/workout-sessions/" + session.path("id").asString();
+        JsonNode paused = post(path + "/pause", Map.of("expected_version", session.path("version"), "reason", "manual"), 200);
+        JsonNode abandoned = post(path + "/abandon", Map.of("expected_version", paused.path("version")), 200);
+        assertEquals("abandoned", abandoned.path("status").asString());
+        assertTrue(get(path + "/result").path("gem").isNull());
+        assertEquals(0, get("/api/me/gems").path("items").size());
+        request(A, HttpMethod.POST, path + "/feedback", Map.of("soreness_body_parts", java.util.List.of("없음"), "difficulty", 3, "enjoyment", 4), UUID.randomUUID().toString(), 409);
+    }
+
+    @Test
+    void concurrentConfirmationRetriesProduceOneVersionAndOneReceipt() {
+        JsonNode curriculum = generatedCurriculum();
+        UUID id = UUID.fromString(curriculum.path("id").asString());
+        UUID key = UUID.randomUUID();
+        var payload = Map.of("expected_version", curriculum.path("version"));
+        var type = mapper.constructType(tungtungball.healthmithbackend.dto.CurriculumResponse.class);
+        var first = journey.<tungtungball.healthmithbackend.dto.CurriculumResponse>command("confirm", id, key, payload, "unused", type);
+        var second = journey.<tungtungball.healthmithbackend.dto.CurriculumResponse>command("confirm", id, key, payload, "unused", type);
+        var results = ReactiveSurveyIntegrationTest.asUser(UUID.fromString(A), reactor.core.publisher.Mono.zip(first, second)).block();
+        assertEquals(results.getT1(), results.getT2());
+        assertEquals(2L, results.getT1().version());
+        assertEquals(1L, ADMIN.sql("SELECT count(*) AS n FROM private.journey_receipts WHERE resource_id=:id AND operation='confirm'")
+                .bind("id", id).map((row, metadata) -> row.get("n", Long.class)).one().block());
     }
 }

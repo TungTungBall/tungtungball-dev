@@ -15,3 +15,4 @@ DO $$ BEGIN
 END $$;
 GRANT USAGE ON SCHEMA public TO healthmith_worker;
 GRANT EXECUTE ON FUNCTION public.generation_worker(text,uuid,integer,jsonb) TO healthmith_worker;
+GRANT EXECUTE ON FUNCTION public.combat_tick() TO healthmith_worker;

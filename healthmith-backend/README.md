@@ -1,5 +1,7 @@
 # 헬스미스 백엔드
 
+전체 API 범위·R2DBC 연결·DB 역할·worker 설정·검증 방법은 [백엔드 개발 및 실행 안내](BACKEND-DEVELOPMENT.md)를 참고한다.
+
 ## 스모크 테스트
 
 실제 Spring Boot 서버를 띄워 인증 정보 없이 `GET /health`를 호출한다.

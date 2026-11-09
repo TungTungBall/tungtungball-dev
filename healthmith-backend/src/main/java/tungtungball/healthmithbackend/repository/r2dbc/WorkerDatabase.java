@@ -27,6 +27,10 @@ public class WorkerDatabase {
                         .option(ConnectionFactoryOptions.USER, properties.username())
                         .option(ConnectionFactoryOptions.PASSWORD, properties.password()).build())) : null;
     }
+    public Mono<Void> combatTick() {
+        if (client == null) { return Mono.error(new IllegalStateException("worker DB 설정이 필요합니다.")); }
+        return client.sql("SELECT public.combat_tick()").then();
+    }
     public boolean configured() { return properties.configured(); }
     public Mono<JsonNode> generation(String operation, UUID worker, int seconds, Object payload) {
         if (client == null) { return Mono.error(new IllegalStateException("worker DB 설정이 필요합니다.")); }
