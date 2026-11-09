@@ -133,4 +133,4 @@ GCP 웹 OAuth 클라이언트의 리디렉션 URI는 Supabase Google 공급자 �
 
 개발 서버에 접속하는 호스트와 `APP_URL`을 일치시킨다. 실제 배포에서는 HTTPS origin과 정확한 콜백 URL로 설정을 변경한다. 비밀 값 파일은 Git에서 제외한다.
 
-2026-11-10 macOS에서 새 GCP 웹 OAuth 클라이언트와 Supabase Google 공급자를 연결해 실제 Google 로그인 → `/survey` 복귀 → `/login` 재방문 및 새로고침 후 세션 유지 → 로그아웃을 확인했다. GCP 앱은 외부 테스트 모드이며 배포 도메인 설정·운영 공개는 별도다. 이 확인에는 사전조사 저장이나 전체 업무 API의 실서비스 검증은 포함하지 않는다.
+2026-11-10 macOS에서 새 GCP 웹 OAuth 클라이언트와 Supabase Google 공급자를 연결해 실제 Google 로그인 → `/survey` 복귀 → `/login` 재방문 및 새로고침 후 세션 유지 → 로그아웃을 확인했다. 후속 DB 설정 후에는 브라우저 사전조사 저장과 실제 두 계정 JWT의 조회·수정·소유권 차단도 검증했다. 상세 결과는 [백엔드 연동 기록](../healthmith-backend/BACKEND-DEVELOPMENT.md)에 있다. GCP 앱은 외부 테스트 모드이며 배포 도메인 설정·운영 공개, 전체 업무 API의 실서비스 검증은 별도다.

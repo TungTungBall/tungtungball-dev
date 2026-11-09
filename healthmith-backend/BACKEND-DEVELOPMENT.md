@@ -91,3 +91,54 @@ worker DB에는 `WORKER_R2DBC_URL`, `WORKER_R2DBC_USERNAME`, `WORKER_R2DBC_PASSW
 
 운영 Supabase DB/JWT·실제 Gemini·모바일 손 인식·문양 정확도·밸런스·운영 부하/복구·배포는
 검증하지 않았다. 팀의 인수 조건·승인·병합 상태는 변경하지 않았다.
+
+## 실제 Supabase 연동 확인 (2026-11-10)
+
+앞 절의 2026-11-09 기록 이후 새 Supabase 프로젝트에 마이그레이션 12개와 최소 권한 역할을 적용했다.
+`healthmith_app`에 별도 로그인 비밀번호를 설정하고 백엔드 `.env`의 R2DBC 연결에 사용한다.
+관리자 비밀번호와 앱 비밀번호를 분리했으며 앱에는 관리자·역할 생성·RLS 우회 권한이 없다.
+관리자 DB 자격 증명과 OAuth Secret 보관본은 `.env.admin`에 두고 앱 서버는 `.env`만 읽는다.
+worker 역할은 `NOLOGIN`이고 worker는 계속 비활성이다.
+
+현재 네트워크의 직접 IPv6 접속 대신 IPv4 세션 풀러를 사용한다. Supabase Dashboard의 Database Settings에서
+다운로드한 CA를 지정하고 `sslMode=verify-full`로 서버 인증서와 호스트 이름을 검증한다.
+인증서와 검증 결과는 Git에서 제외되는 `.local/`, 앱 비밀번호와 연결 값은 `.env`에 보관한다.
+세션 풀러 계정 이름은 `healthmith_app.<PROJECT_REF>`이며 실제 DB 역할은 `healthmith_app`이다.
+연결 풀은 `R2DBC_POOL_MAX_SIZE`로 조절하며 초기 연결은 요청 시 만든다.
+
+관리자 마이그레이션 도구는 Python 3와 `psql`이 필요하며 `healthmith-backend/`에서 실행한다.
+
+```sh
+python3 scripts/apply-supabase-migrations.py          # 적용 예정 목록
+python3 scripts/apply-supabase-migrations.py --apply  # SQL·이력을 같은 트랜잭션으로 적용
+```
+
+필요한 관리자 설정 이름은 `.env.admin.example`에 있다. 도구는 비밀번호를 명령 인수나 출력에 넣지 않는다.
+적용 이력은 `supabase_migrations.schema_migrations`에 원문과 함께 저장한다. 이미 적용한 파일의 내용이 다르면
+중단하며, 적용 후 재검사에서 신규 마이그레이션 0개를 확인했다. 앱 서버는 이 도구를 자동 실행하지 않는다.
+기존 Supabase CLI 이력과 원문 저장 방식이 다르면 중단하므로, 기존 프로젝트의 이력을 덮어쓰는 용도로 사용하지 않는다.
+
+서로 다른 두 Google 계정으로 실제 로그인한 뒤 다음을 확인했다.
+
+- 브라우저 `/survey` → Next.js 서버 → Spring JWT 검증 → R2DBC → Supabase 저장 성공.
+- 실제 발급된 사용자 JWT로 소유자 저장(201)·조회(200)·수정(200), 수정 후 버전 2 확인.
+- 같은 키 재전송은 버전 2 유지, 오래된 버전 수정은 409로 거절.
+- 두 번째 사용자는 자기 행을 저장·조회할 수 있고 첫 사용자의 조회·수정은 404로 차단.
+- 비로그인·서명 변조 JWT는 401, 요청 본문의 소유자 주입은 400으로 차단.
+- 앱 DB 계정으로 직접 실행해도 다른 소유자의 행은 보이지 않으며 위조 소유자 INSERT,
+  직접 UPDATE·DELETE·worker 함수 호출은 SQLSTATE 42501로 차단.
+- 앱 계정의 관리자·service_role 전환, auth.users·영수증 테이블 조회, 객체 생성 권한 없음.
+- 테스트용 사전조사 3개와 수정 영수증, 임시 JWT 파일을 검증 후 정리했다.
+- JDK 21에서 전체 백엔드 테스트 314개(실패·오류·스킵 0)와 bootJar 통과.
+
+`scripts/verify-live-survey.py`는 실제 사용자 토큰을 별도 JSON 파일에서 읽어 같은 HTTP 검증을 실행할 수 있다.
+`owner` 모드의 결과 파일과 토큰 파일을 각각 `other --owner-report`, `--owner-session-file`에 전달하며 서로 다른 사용자여야 한다.
+다른 사용자 검증 전에 소유자 토큰으로 대상 행이 여전히 존재하는지 확인한다. 삭제한 행의 404를 접근 차단으로 오인하지 않는다.
+토큰은 출력하지 않고, 검증 요청에 인증 헤더를 전달한 채 리디렉션을 따라가지 않는다.
+각 실행은 테스트 행을 만들고 결과 파일의 `created_ids`에 정리할 ID를 기록하므로 관리자가 해당 행만 정리한다.
+토큰·결과 파일은 `.local/`에 두고 JWT 파일은 검증 후 삭제한다.
+
+확인 범위는 실제 로그인과 사전조사 저장·조회·수정·소유권이다. Gemini 생성, 실제 운동 카탈로그·전투 정책,
+카메라 인식, 운영 부하·복구·배포는 이 연동 검사에 포함하지 않는다.
+연결 설정 근거는 [Supabase SSL 안내](https://supabase.com/docs/guides/platform/ssl-enforcement)와
+[R2DBC PostgreSQL 드라이버 설정](https://github.com/pgjdbc/r2dbc-postgresql)이다.
