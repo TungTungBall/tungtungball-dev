@@ -19,23 +19,24 @@
 
 ## 확인된 실행 방법
 
-2026-10-27 실행 저장소 `b030df9`의 파일과 기록을 기준으로 한다. 작업 시 현재 파일·설정이 달라졌는지도 확인한다.
+아래는 5명이 모두 성공한 기본 명령만 적는다(기본 실행 5/5, [초기화 계획 6절](https://github.com/TungTungBall/tungtungball/blob/main/docs/SETUP-PLAN.md)). 처음 기준은 2026-10-27 실행 저장소 `b030df9`이며, 작업 시 현재 파일·설정이 달라졌는지도 확인한다.
 
 | 실행 위치 | 명령 | 동작·주의 |
 | --- | --- | --- |
 | 실행 저장소의 `healthmith-frontend/` | `pnpm install --frozen-lockfile` | 기존 의존성 복원. 학생이 요구 버전을 맞춘 뒤 직접 실행하며 잠금 파일을 갱신하지 않는다 |
 | 같은 폴더 | `pnpm dev` | 개발 화면, 포트 3000 |
-| 같은 폴더 | `pnpm lint`, `pnpm typecheck`, `pnpm test:unit` | 각각 린트·타입·단위 검사. 단위 테스트 2개가 있다 |
+| 같은 폴더 | `pnpm lint`, `pnpm typecheck`, `pnpm test:unit` | 각각 린트·타입·단위 검사 |
 | 같은 폴더 | `pnpm build`, 이후 `pnpm start` | 프로덕션 빌드·실행, 포트 3000 |
 | 같은 폴더 | `pnpm build`, 이후 `pnpm test:e2e` | Playwright가 프로덕션 서버를 자동 실행한다. Chromium 설치가 필요하며 3000의 기존 서버를 재사용하지 않는다 |
 | 실행 저장소의 `healthmith-backend/` | `./gradlew bootRun` | JDK 21, 기본 포트 8080. `GET /health`는 인증 없이 HTTP 200과 JSON `status: UP`을 반환한다 |
-| 같은 폴더 | `./gradlew test` | 컨텍스트·health 스모크 테스트 총 2개 |
+| 같은 폴더 | `./gradlew test` | 백엔드 전체 테스트. 개수는 기능이 늘며 바뀌므로 실행 결과로 확인한다 |
 | 같은 폴더 | `./gradlew test --tests 'tungtungball.healthmithbackend.HealthSmokeTest'` | 실제 서버를 임의 포트로 띄우는 스모크 테스트 1개 |
 | 각 저장소 루트 | `git diff --check` | 문서 공백 검사. 새 파일은 스테이징 전 검사 범위에서 빠지므로 별도 확인한다 |
 
 - 프론트엔드 요구 버전은 Node.js `24.x`, pnpm `11.25.0`이다. `.node-version`은 `24.20.0`이다. JDK toolchain은 21, Gradle은 저장소 wrapper를 쓴다.
 - Windows 백엔드 명령은 `./gradlew` 대신 `.\gradlew.bat`를 쓴다. 실행하지 않은 OS의 결과를 통과로 기록하지 않는다.
-- 위 명령은 프론트 CI와 Mac 1대(프론트 전체 검사·백엔드 테스트·실제 Spring 연결)에서 성공했다(2026-10-27 기준 5명 중 1명 기록). 현황은 [초기화 계획 6절](https://github.com/TungTungBall/tungtungball/blob/main/docs/SETUP-PLAN.md)에서 확인하며, 다른 사람의 결과로 본인 실행을 대신하지 않는다.
+- 위 명령은 프론트 CI와 5명의 기본 실행에서 성공했다(2026-11-03 PM 확인, 개인 로그는 일부 미첨부). 다른 사람의 결과로 본인 실행을 대신하지 않는다.
+- 사전조사 기능(US-01)의 실행 방법은 **미정**이다. 5명의 새 기능 실행 기록이 [첫 기능 3절](https://github.com/TungTungBall/tungtungball/blob/main/docs/decisions/first-feature.md#3-실행-확인-각자의-실제-기록)에 모이면 그때 5명이 모두 성공한 명령만 이 표에 추가한다.
 - 현재 CI 설정은 프론트엔드만 대상으로 한다. 백엔드 CI나 저장소의 필수 검사 유무는 GitHub에서 따로 확인한다.
 - 의존성 복원·Chromium 준비와 최초 프로젝트 생성은 구분한다. 설치·초기화는 수업 안내대로 학생이 공식 문서를 보고 직접 진행하며, 이미 만든 프로젝트에 생성기를 다시 실행하지 않는다.
 
@@ -66,8 +67,18 @@
 - LLM은 초안·안내·요약을 맡는다. 커리큘럼 확정·게임 시작은 사용자 확인, 횟수·단계 판정은 규칙을 따른다.
 - LLM 전송 금지는 해당 US, 서버 전송·저장 범위는 STACK.md 4절을 각각 확인한다. 서로 다른 금지 범위를 하나로 합치거나 확대하지 않는다.
 - 비밀 값·개인 경로는 공유하지 않는다. 환경변수는 이름과 공개 가능한 기본 동작만 기록한다. 개인 지침·로컬 권한 설정은 커밋하지 않는다.
-- 현재 health 연결은 Next.js 서버가 Spring 서버에 요청한다. JWT·Supabase·Gemini·브라우저 API 호출·CORS까지 구현됐다고 가정하지 않는다.
+- 실행 저장소 main에는 공통 기반(Supabase 사용자 JWT 검증, 엄격한 JSON·API.md 오류 형식, CORS, `survey_submissions` 테이블·RLS)과 US-01 첫 저장 흐름(저장 API #16, 서버 전용 로그인 세션 #15, `/survey` 화면 #17)이 있다. 로그인 화면(구글 로그인)·실제 Supabase 프로젝트 연동 검증·조회/수정 API·Gemini 호출은 아직 없다. 있는 것만 근거로 삼고 없는 기능을 가정하지 않는다.
+- 실제 Supabase 연결에는 `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` 환경변수가 백엔드와 프론트(Next.js 서버) 양쪽에 필요하다. 값은 문서·대화·커밋에 넣지 않는다.
 - 계획 밖의 파일·명령, 다른 역할의 영역이나 공유 설정이 필요하면 이유와 범위를 알린다. 승인된 작업을 임의로 넓히지 않는다.
+
+## 3주차 팀 규칙
+
+- 기능은 [첫 기능](https://github.com/TungTungBall/tungtungball/blob/main/docs/decisions/first-feature.md)에 적은 범위만 구현한다. 범위에 없는 동작은 만들지 않고 질문으로 남긴다.
+- 영역 담당은 자기 영역 폴더의 파일만 만들고 고친다. 담당 폴더와 공유 파일은 [코딩 스타일](https://github.com/TungTungBall/tungtungball/blob/main/docs/CODE-STYLE.md) 4번과 담당 폴더 표를 따른다. 공유 파일이 필요하면 고치지 말고 알린다.
+- 테스트 파일과 기대값을 구현에 맞춰 바꾸지 않는다(코딩 스타일 8번). 바꿔야 할 것 같으면 멈추고 이유를 설명한다.
+- 실행하지 않은 명령을 실행했다고 보고하지 않는다. 실행한 명령과 실제 결과를 구분해 보고한다.
+- `.env` 같은 비밀 값 파일은 읽거나 대화에 붙이지 않는다. 필요한 환경변수는 이름만 다룬다.
+- MCP는 팀 결정으로 연결하지 않는다([MCP 사용 기록](https://github.com/TungTungBall/tungtungball/blob/main/docs/decisions/mcp-use.md)). 새 서버를 연결하거나 설치하지 않는다.
 
 ## 역할별 규칙
 
