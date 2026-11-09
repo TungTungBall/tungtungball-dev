@@ -9,7 +9,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
-import tungtungball.healthmithbackend.client.GenerationWorkerClient;
+import tungtungball.healthmithbackend.repository.GenerationWorkerStore;
 import tungtungball.healthmithbackend.client.GeminiGenerationClient;
 import tungtungball.healthmithbackend.config.GenerationWorkerProperties;
 import java.time.Instant;
@@ -18,18 +18,19 @@ import java.util.UUID;
 @Service
 public class GenerationWorkerService {
     private static final org.slf4j.Logger log=org.slf4j.LoggerFactory.getLogger(GenerationWorkerService.class);
-    private final GenerationWorkerClient database;
+    private final GenerationWorkerStore database;
     private final GeminiGenerationClient gemini;
     private final GenerationWorkerProperties properties;
     private final JsonMapper mapper;
     private final UUID workerId=UUID.randomUUID();
     private Disposable loop;
-    public GenerationWorkerService(GenerationWorkerClient database,GeminiGenerationClient gemini,GenerationWorkerProperties properties,JsonMapper mapper) {
+    public GenerationWorkerService(GenerationWorkerStore database,GeminiGenerationClient gemini,GenerationWorkerProperties properties,JsonMapper mapper) {
         this.database=database;this.gemini=gemini;this.properties=properties;this.mapper=mapper;
     }
     @EventListener(ApplicationReadyEvent.class)
     public void start() {
-        properties.validateEnabled();
+        if (!properties.enabled()) { return; }
+        properties.validateEnabled(database.directDatabase());
         if (properties.enabled()) { loop=Flux.interval(properties.pollInterval()).onBackpressureDrop().concatMap(t -> tick().onErrorResume(error -> { log.warn("생성 worker 저장소 요청 실패: {}",error.getClass().getSimpleName());return Mono.empty(); })).subscribe(); }
     }
     public Mono<Void> tick() {

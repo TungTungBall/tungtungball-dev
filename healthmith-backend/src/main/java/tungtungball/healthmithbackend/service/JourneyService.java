@@ -3,6 +3,7 @@ package tungtungball.healthmithbackend.service;
 import org.springframework.stereotype.Service;
 import org.springframework.security.oauth2.jwt.Jwt;
 import reactor.core.publisher.Mono;
+import tungtungball.healthmithbackend.repository.JourneyStore;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.json.JsonMapper;
 import tungtungball.healthmithbackend.client.JourneyClient;
@@ -23,10 +24,10 @@ import java.util.UUID;
 
 @Service
 public class JourneyService {
-    private final JourneyClient client;
+    private final JourneyStore client;
     private final JsonMapper mapper;
     private final GenerationWorkflowService workflow;
-    public JourneyService(JourneyClient client, JsonMapper mapper, GenerationWorkflowService workflow) { this.client=client;this.mapper=mapper;this.workflow=workflow; }
+    public JourneyService(JourneyStore client, JsonMapper mapper, GenerationWorkflowService workflow) { this.client=client;this.mapper=mapper;this.workflow=workflow; }
     public <T> Mono<T> command(String operation, String id, String key, Object payload, Jwt jwt, Class<T> type) {
         return Mono.defer(() -> {
             owner(jwt);

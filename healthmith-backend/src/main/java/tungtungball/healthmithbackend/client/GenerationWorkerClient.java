@@ -10,7 +10,8 @@ import tungtungball.healthmithbackend.config.SupabaseProperties;
 import java.util.UUID;
 
 @Component
-public class GenerationWorkerClient {
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name="app.persistence.mode", havingValue="postgrest")
+public class GenerationWorkerClient implements tungtungball.healthmithbackend.repository.GenerationWorkerStore {
     private final GenerationWorkerProperties properties;
     private final SupabaseProperties supabase;
     private final JsonMapper mapper;

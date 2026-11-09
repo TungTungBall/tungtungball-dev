@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import tungtungball.healthmithbackend.repository.WorkoutStore;
 import tungtungball.healthmithbackend.client.WorkoutClient;
 import tungtungball.healthmithbackend.config.error.ApiException;
 import tungtungball.healthmithbackend.dto.CurrentWorkoutResponse;
@@ -15,8 +16,8 @@ import java.util.UUID;
 
 @Service
 public class WorkoutService {
-    private final WorkoutClient client;
-    public WorkoutService(WorkoutClient client) { this.client = client; }
+    private final WorkoutStore client;
+    public WorkoutService(WorkoutStore client) { this.client = client; }
 
     public Mono<CurrentWorkoutResponse> current(Jwt jwt) {
         return Mono.defer(() -> client.current(owner(jwt), jwt.getTokenValue()).map(result -> {

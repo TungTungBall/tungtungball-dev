@@ -7,9 +7,10 @@ import java.time.Duration;
 @ConfigurationProperties("generation.worker")
 public record GenerationWorkerProperties(@DefaultValue("false") boolean enabled,String serviceKey,String geminiKey,String model,
         Duration pollInterval,Duration requestTimeout,Duration queuedTimeout,Integer leaseSeconds,Integer maxOutputTokens) {
-    public void validateEnabled() {
+    public void validateEnabled() { validateEnabled(false); }
+    public void validateEnabled(boolean directDatabase) {
         if (!enabled) { return; }
-        if (serviceKey==null || serviceKey.isBlank() || geminiKey==null || geminiKey.isBlank() || model==null || !model.matches("[a-zA-Z0-9._-]+")
+        if ((!directDatabase && (serviceKey==null || serviceKey.isBlank())) || geminiKey==null || geminiKey.isBlank() || model==null || !model.matches("[a-zA-Z0-9._-]+")
                 || pollInterval==null || pollInterval.isNegative() || pollInterval.isZero() || requestTimeout==null || requestTimeout.isNegative() || requestTimeout.isZero()
                 || queuedTimeout==null || queuedTimeout.isNegative() || queuedTimeout.isZero() || leaseSeconds==null || leaseSeconds<=0
                 || requestTimeout.compareTo(Duration.ofSeconds(leaseSeconds))>=0 || maxOutputTokens==null || maxOutputTokens<=0) {

@@ -49,3 +49,17 @@ commit/rollback 때 해제한다. 요청 본문의 소유자나 서명 검증 �
 
 기술 근거: [Spring Data R2DBC](https://docs.spring.io/spring-data/relational/reference/r2dbc/repositories.html),
 [Spring R2DBC 트랜잭션](https://docs.spring.io/spring-framework/reference/data-access/r2dbc.html).
+
+## 생성 worker와 운영 정책
+
+worker DB에는 `WORKER_R2DBC_URL`, `WORKER_R2DBC_USERNAME`, `WORKER_R2DBC_PASSWORD`를 별도로 주입한다.
+`healthmith_worker`는 일반 사용자 테이블을 읽거나 쓸 수 없고 허용된 worker 함수만 실행한다.
+사용자 API 연결에는 이 역할을 부여하지 않는다. 기존 PostgREST 모드에서만 service key를 사용한다.
+생성 worker는 기본 비활성이다. 활성화에는 Gemini key/model, poll/request/queue timeout, lease,
+출력 한도와 DB의 `generation_validation` 정책이 필요하다. 예시 운동·수치·프롬프트를 운영 정책으로
+자동 등록하지 않는다. 실제 Gemini 호출과 출력 품질은 별도 확인한다.
+
+실제 운동/부위 매핑·반복 상한·속도 안내, 자유 입력 정제/생성 요약 외부 전송 승인,
+확정 커리큘럼 재사용, 통계 시간대/계산식, 작업/영수증 보존 기간은 명세의 미정 상태를 유지한다.
+시작 정책 누락은 `503 POLICY_NOT_CONFIGURED`, 생성 worker 미준비는 `503 GENERATION_UNAVAILABLE`로
+알리며, 통계 미정 값은 명세대로 null을 반환한다. 사전조사 저장만으로 생성·게임을 시작하지 않는다.

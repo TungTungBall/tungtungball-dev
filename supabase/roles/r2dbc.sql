@@ -7,3 +7,11 @@ DO $$ BEGIN
 END $$;
 GRANT authenticated TO healthmith_app;
 GRANT USAGE ON SCHEMA public, auth TO healthmith_app;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'healthmith_worker') THEN
+        CREATE ROLE healthmith_worker NOLOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS;
+    END IF;
+END $$;
+GRANT USAGE ON SCHEMA public TO healthmith_worker;
+GRANT EXECUTE ON FUNCTION public.generation_worker(text,uuid,integer,jsonb) TO healthmith_worker;

@@ -3,6 +3,7 @@ package tungtungball.healthmithbackend.service;
 import org.springframework.stereotype.Service;
 import org.springframework.security.oauth2.jwt.Jwt;
 import reactor.core.publisher.Mono;
+import tungtungball.healthmithbackend.repository.GenerationWorkflowStore;
 import tools.jackson.databind.json.JsonMapper;
 import tungtungball.healthmithbackend.client.GenerationWorkflowClient;
 import tungtungball.healthmithbackend.dto.GenerationWorkflowResponse;
@@ -10,9 +11,9 @@ import java.util.UUID;
 
 @Service
 public class GenerationWorkflowService {
-    private final GenerationWorkflowClient client;
+    private final GenerationWorkflowStore client;
     private final JsonMapper mapper;
-    public GenerationWorkflowService(GenerationWorkflowClient client,JsonMapper mapper) { this.client=client;this.mapper=mapper; }
+    public GenerationWorkflowService(GenerationWorkflowStore client,JsonMapper mapper) { this.client=client;this.mapper=mapper; }
     public <T> Mono<T> execute(String operation,String id,String key,Object payload,Jwt jwt,Class<T> type) {
         return Mono.defer(() -> {
             try { UUID.fromString(jwt.getSubject()); }

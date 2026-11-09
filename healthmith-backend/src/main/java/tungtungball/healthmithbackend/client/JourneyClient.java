@@ -16,7 +16,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
-public class JourneyClient {
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name="app.persistence.mode", havingValue="postgrest")
+public class JourneyClient implements tungtungball.healthmithbackend.repository.JourneyStore {
     private final WebClient client;
     private final JsonMapper mapper;
     public JourneyClient(@Qualifier("supabaseWebClient") WebClient client, JsonMapper mapper) {

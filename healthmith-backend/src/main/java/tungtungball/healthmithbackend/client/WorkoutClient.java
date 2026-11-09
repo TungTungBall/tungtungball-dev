@@ -17,7 +17,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
-public class WorkoutClient {
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name="app.persistence.mode", havingValue="postgrest")
+public class WorkoutClient implements tungtungball.healthmithbackend.repository.WorkoutStore {
     private static final String FIELDS = "id,curriculum_id,status,current_stage_index,current_repetitions,completed_stage_count,version,stage_results,started_at,updated_at,ended_at,feedback_status";
     private final WebClient client;
     public WorkoutClient(@Qualifier("supabaseWebClient") WebClient client, JsonMapper mapper) {

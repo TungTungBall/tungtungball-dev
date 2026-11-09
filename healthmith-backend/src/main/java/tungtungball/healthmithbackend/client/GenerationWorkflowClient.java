@@ -16,7 +16,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
-public class GenerationWorkflowClient {
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name="app.persistence.mode", havingValue="postgrest")
+public class GenerationWorkflowClient implements tungtungball.healthmithbackend.repository.GenerationWorkflowStore {
     private final WebClient client;
     private final JsonMapper mapper;
     public GenerationWorkflowClient(@Qualifier("supabaseWebClient") WebClient client, JsonMapper mapper) {

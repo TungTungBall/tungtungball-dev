@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import tungtungball.healthmithbackend.repository.GenerationStore;
 import tungtungball.healthmithbackend.client.GenerationClient;
 import tungtungball.healthmithbackend.config.error.ApiErrorResponse;
 import tungtungball.healthmithbackend.config.error.ApiException;
@@ -21,9 +22,9 @@ import java.util.UUID;
 public class GenerationService {
     private static final Set<String> BODY_PARTS = Set.of("상체", "하체", "허리");
     private static final List<String> STAGE_NAMES = List.of("광석 채굴", "광석 쪼개기", "광석 세척", "광석 가공", "보석 연마");
-    private final GenerationClient client;
+    private final GenerationStore client;
 
-    public GenerationService(GenerationClient client) {
+    public GenerationService(GenerationStore client) {
         this.client = client;
     }
 
