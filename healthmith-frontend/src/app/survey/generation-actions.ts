@@ -2,6 +2,7 @@
 
 import { getBackendApiUrl } from "@/config/env";
 import { getUserSession } from "@/config/session";
+import { workoutErrorMessage } from "@/lib/healthmith/workout-contract";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const TIMEOUT_MS = 10_000;
@@ -77,7 +78,9 @@ export async function createCurriculumGeneration(submissionId: string): Promise<
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     if (response.status === 401) return { state: "unauthorized", message: "로그인 상태를 확인해 주세요." };
-    const job = parseJob(await response.json());
+    const body: unknown = await response.json();
+    if (!response.ok) return { state: "failed", message: workoutErrorMessage(body) };
+    const job = parseJob(body);
     return response.status === 202 && job?.status !== "failed" && job
       ? { state: "ok", job }
       : { state: "failed", message: "초안 생성 요청을 시작하지 못했어요. 잠시 후 다시 시도해 주세요." };
@@ -127,7 +130,7 @@ export async function readGeneratedCurriculum(curriculumId: string): Promise<
       return { state: "failed", message: "생성된 초안을 불러오지 못했어요." };
     }
     const { status, version, stages } = value;
-    if (status !== "draft" || typeof version !== "number" || !Number.isSafeInteger(version) || version < 1 || stages.length !== 5) {
+    if ((status !== "draft" && status !== "confirmed") || typeof version !== "number" || !Number.isSafeInteger(version) || version < 1 || stages.length !== 5) {
       return { state: "failed", message: "생성된 초안 응답을 확인할 수 없어요." };
     }
     const parsedStages: GeneratedCurriculum["stages"] = [];
@@ -144,6 +147,10 @@ export async function readGeneratedCurriculum(curriculumId: string): Promise<
       });
     }
     parsedStages.sort((a, b) => a.stage_index - b.stage_index);
+    if (parsedStages.some((s, i) => s.stage_index !== i + 1 || !Number.isSafeInteger(s.target_repetitions) || s.target_repetitions < 1
+      || !s.stage_name.trim() || !s.exercise_name.trim() || !s.pace_instruction.trim() || !s.internal_focus_instruction.trim())) {
+      return { state: "failed", message: "생성된 초안 응답을 확인할 수 없어요." };
+    }
     return { state: "ok", curriculum: { id: curriculumId, status, version, stages: parsedStages } };
   } catch {
     return { state: "failed", message: "생성된 초안을 불러오지 못했어요." };
@@ -169,7 +176,9 @@ export async function regenerateCurriculum(curriculumId: string, expectedVersion
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     if (response.status === 401) return { state: "unauthorized", message: "로그인 상태를 확인해 주세요." };
-    const job = parseJob(await response.json());
+    const body: unknown = await response.json();
+    if (!response.ok) return { state: "failed", message: workoutErrorMessage(body) };
+    const job = parseJob(body);
     return response.status === 202 && job?.status !== "failed" && job
       ? { state: "ok", job }
       : { state: "failed", message: "새 초안 생성 요청을 시작하지 못했어요. 잠시 후 다시 시도해 주세요." };

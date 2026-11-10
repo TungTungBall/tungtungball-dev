@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
 
 import { ActionBar, ActionLink, Card, Notice, PageIntro } from "@/components/healthmith/ui";
+import { Button } from "@/components/ui/button";
+import { confirmWorkoutCurriculum } from "@/app/(experience)/workout/actions";
+import { commandKey } from "@/lib/healthmith/command-key";
 
 import {
   readCurriculumGeneration,
@@ -21,6 +24,7 @@ export function GeneratedRoutineView({ requestId }: { requestId: string }) {
   const [message, setMessage] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [acknowledged, setAcknowledged] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -28,25 +32,27 @@ export function GeneratedRoutineView({ requestId }: { requestId: string }) {
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     async function poll() {
-      const result = await readCurriculumGeneration(requestId);
-      if (!active) return;
-      if (result.state !== "ok") {
-        setMessage(result.message);
-        return;
-      }
-      setJob(result.job);
-      if (result.job.status === "failed") {
-        setMessage(result.job.error?.message ?? "초안을 만들지 못했어요.");
-        return;
-      }
-      if (result.job.status === "succeeded" && result.job.curriculum_id) {
-        const loaded = await readGeneratedCurriculum(result.job.curriculum_id);
+      try {
+        const result = await readCurriculumGeneration(requestId);
         if (!active) return;
-        if (loaded.state === "ok") setCurriculum(loaded.curriculum);
-        else setMessage(loaded.message);
-        return;
-      }
-      timer = setTimeout(poll, 2_000);
+        if (result.state !== "ok") {
+          setMessage(result.message);
+          return;
+        }
+        setJob(result.job);
+        if (result.job.status === "failed") {
+          setMessage(result.job.error?.message ?? "초안을 만들지 못했어요.");
+          return;
+        }
+        if (result.job.status === "succeeded" && result.job.curriculum_id) {
+          const loaded = await readGeneratedCurriculum(result.job.curriculum_id);
+          if (!active) return;
+          if (loaded.state === "ok") setCurriculum(loaded.curriculum);
+          else setMessage(loaded.message);
+          return;
+        }
+        timer = setTimeout(poll, 2_000);
+      } catch { if (active) setMessage("생성 상태를 확인하지 못했어요. 잠시 후 이 주소로 다시 열어 주세요."); }
     }
 
     void poll();
@@ -77,7 +83,7 @@ export function GeneratedRoutineView({ requestId }: { requestId: string }) {
 
   return <>
     <PageIntro eyebrow="YOUR QUEST / 생성된 초안" title="오늘의 운동 설계도" description="백엔드가 생성한 단계와 안내를 확인해 주세요." />
-    <div className="hm-routine-meta"><span className="is-draft">커리큘럼 초안</span><span>버전 {curriculum.version}</span></div>
+    <div className="hm-routine-meta"><span className="is-draft">{curriculum.status === "confirmed" ? "확정한 커리큘럼" : "커리큘럼 초안"}</span><span>버전 {curriculum.version}</span></div>
     <ol className="hm-routine-list">
       {curriculum.stages.map((stage) => (
         <li key={stage.stage_index} className="hm-routine-item">
@@ -90,16 +96,30 @@ export function GeneratedRoutineView({ requestId }: { requestId: string }) {
     <button
       type="button"
       className="hm-action hm-action-secondary"
-      disabled={pending}
+      disabled={pending || curriculum.status !== "draft"}
       onClick={() => startTransition(async () => {
-        setActionMessage(null);
-        const result = await regenerateCurriculum(curriculum.id, curriculum.version);
-        if (result.state === "ok") router.push(`/routine/generation/${encodeURIComponent(result.job.id)}`);
-        else setActionMessage(result.message);
+        try {
+          setActionMessage(null);
+          const result = await regenerateCurriculum(curriculum.id, curriculum.version);
+          if (result.state === "ok") router.push(`/routine/generation/${encodeURIComponent(result.job.id)}`);
+          else setActionMessage(result.message);
+        } catch { setActionMessage("새 초안 요청 결과를 확인하지 못했어요. 생성 상태를 다시 확인해 주세요."); }
       })}
     >{pending ? "새 초안을 요청하고 있어요…" : "다른 초안 다시 만들기"}</button>
     {actionMessage && <p role="alert" className="hm-error">{actionMessage}</p>}
-    <Notice>생성된 내용을 확인한 뒤, 커리큘럼 확정과 운동 연결을 이어서 제공할 예정이에요.</Notice>
-    <ActionBar><Link href="/survey" className="hm-action-button">사전조사 화면으로</Link></ActionBar>
+    {curriculum.status === "draft" && <label className="hm-confirmation"><input type="checkbox" checked={acknowledged} onChange={(e) => setAcknowledged(e.target.checked)} /><span>운동 단계와 안내를 확인했어요.</span></label>}
+    <Notice>직접 확정한 루틴으로만 운동을 시작해요. 카메라 준비 화면에서 시작 여부를 다시 확인할 수 있어요.</Notice>
+    <ActionBar><Button className="hm-action-button" disabled={pending || (curriculum.status === "draft" && !acknowledged)} onClick={() => startTransition(async () => {
+      try {
+        setActionMessage(null);
+        if (curriculum.status === "confirmed") { router.push(`/camera?curriculumId=${encodeURIComponent(curriculum.id)}`); return; }
+        const r = await confirmWorkoutCurriculum(curriculum.id, curriculum.version, commandKey(`confirm:${curriculum.id}:${curriculum.version}`));
+        if (r.state === "ok") {
+          setCurriculum({ ...curriculum, status: "confirmed", version: r.data.version });
+          router.push(`/camera?curriculumId=${encodeURIComponent(curriculum.id)}`);
+        } else setActionMessage(r.message);
+      } catch { setActionMessage("확정 결과를 확인하지 못했어요. 같은 요청을 다시 확인하거나 이 주소를 새로 열어 주세요."); }
+    })}>{pending ? "확인 중…" : curriculum.status === "confirmed" ? "확정한 루틴으로 준비하기" : "이 루틴 확정하고 준비하기"}</Button></ActionBar>
+    <Link className="hm-text-link" href="/workout?connected=1">진행 중인 운동 확인하기</Link>
   </>;
 }

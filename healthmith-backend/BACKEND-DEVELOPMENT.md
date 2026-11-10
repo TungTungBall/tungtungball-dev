@@ -142,3 +142,19 @@ python3 scripts/apply-supabase-migrations.py --apply  # SQL·이력을 같은 �
 카메라 인식, 운영 부하·복구·배포는 이 연동 검사에 포함하지 않는다.
 연결 설정 근거는 [Supabase SSL 안내](https://supabase.com/docs/guides/platform/ssl-enforcement)와
 [R2DBC PostgreSQL 드라이버 설정](https://github.com/pgjdbc/r2dbc-postgresql)이다.
+
+## 운동 화면 연결과 MVP 데이터 후속 작업 (#48)
+
+2026-11-10 사용자가 전달한 테크 리드의 중간 미팅용 운동 3종·생성/시작 정책을
+`supabase/seeds/mvp-workout-20261110.sql`에 보관했다. 자동 migration이 아니다.
+실제 Healthmith SQL Editor에서 적용 전 활성 운동 0개·관련 정책 0개를 확인했고,
+적용 후 운동 3개·생성 정책 JSON 일치·루틴 재사용 허용을 확인했다. worker는 비활성으로 유지했다.
+
+`scripts/workout-setup.py`는 변수 이름 진단·DB 읽기 전용 점검·MVP seed 수동 적용·검토한 JSON 설정 등록과
+별도 worker 로그인 준비를 지원한다. 실제 DB의 worker 자격 증명은 이번에 만들지 않았다.
+환경 변수 목록은 `.env.example`, 명령과 카메라/브라우저 검사 범위는
+[실제 운동 연결 안내](../healthmith-frontend/docs/connected-workout.md)를 참고한다.
+
+새 migration `20261110140000_honor_generated_summary_policy.sql`은 `include_generated_summary=false`일 때
+다음 생성 스냅샷에 성향 요약을 복사하지 않는다. 외부 전송 차단을 유지하면서 다음 생성이 실패하는 문제를 고친다.
+이번 실제 DB 변경은 제공받은 seed만이며, 이 migration은 PR 병합 후 별도 적용 대상이다.
