@@ -41,7 +41,7 @@ export const previewScreens = [
   { id: "M07", title: "잠시, 불을 낮추고", href: "/workout/paused", label: "일시정지" },
   { id: "M08", title: "오늘도 빛을 벼렸어요", href: "/workout/complete", label: "운동 완료" },
   { id: "M09", title: "오늘의 여정은 어땠나요", href: "/feedback", label: "운동 후 설문" },
-  { id: "M10", title: "쌓여가는 나의 보석들", href: "/records", label: "나의 기록" },
+  { id: "M10", title: "쌓여가는 나의 보석들", href: "/records?state=populated", label: "나의 기록" },
   { id: "M11", title: "빛과 시야를 열어주세요", href: "/camera/permission", label: "카메라 권한" },
   { id: "M12", title: "막힌 길에서 다시 준비해요", href: "/recovery", label: "복구 상태" },
 ];

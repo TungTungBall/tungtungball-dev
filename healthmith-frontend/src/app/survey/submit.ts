@@ -1,5 +1,5 @@
-import { parseSubmitResponse, UNKNOWN_MESSAGE } from "./response";
-import type { SubmitResult, SurveyAnswers } from "./types";
+import { parseSubmitResponse, parseSurveyDetail, UNKNOWN_MESSAGE } from "./response";
+import type { DetailResult, SubmitResult, SurveyAnswers } from "./types";
 
 // Spring POST /api/survey-submissions 호출. 서버(Server Function)에서만 쓴다.
 // 주소·토큰을 화면 응답이나 로그에 넣지 않는다.
@@ -59,4 +59,78 @@ export async function postSurvey(
     return { state: "unknown", message: UNKNOWN_MESSAGE };
   }
   return parseSubmitResponse(response.status, body, answers);
+}
+
+function buildDetailUrl(baseUrl: string, id: string): URL | null {
+  const base = buildSubmitUrl(baseUrl);
+  if (!base || !/^[0-9a-f-]{36}$/i.test(id)) return null;
+  return new URL(`${base.toString().replace(/\/$/, "")}/${encodeURIComponent(id)}`);
+}
+
+async function parseDetailResponse(response: Response, id: string): Promise<DetailResult> {
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    return { state: "failed", message: "사전조사 내용을 불러오지 못했어요. 잠시 후 다시 시도해 주세요." };
+  }
+  if (response.status === 200) {
+    const submission = parseSurveyDetail(body, id);
+    return submission
+      ? { state: "loaded", submission }
+      : { state: "failed", message: "서버 응답을 확인할 수 없어요." };
+  }
+  if (response.status === 401) return { state: "unauthorized", message: "로그인 상태를 확인해 주세요." };
+  if (response.status === 409 && typeof body === "object" && body !== null && "code" in body && body.code === "VERSION_CONFLICT") {
+    return { state: "conflict", message: "다른 곳에서 내용이 바뀌었어요. 최신 내용을 다시 불러와 주세요." };
+  }
+  return { state: "failed", message: "사전조사 내용을 불러오거나 저장하지 못했어요. 잠시 후 다시 시도해 주세요." };
+}
+
+export async function getSurvey(
+  baseUrl: string,
+  accessToken: string,
+  id: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<DetailResult> {
+  const url = buildDetailUrl(baseUrl, id);
+  if (!url) return { state: "failed", message: "사전조사 주소를 확인할 수 없어요." };
+  try {
+    const response = await fetchImpl(url, {
+      method: "GET", cache: "no-store", redirect: "error",
+      headers: { Accept: "application/json", Authorization: `Bearer ${accessToken}` },
+      signal: AbortSignal.timeout(SUBMIT_TIMEOUT_MS),
+    });
+    return parseDetailResponse(response, id);
+  } catch {
+    return { state: "failed", message: "사전조사 내용을 불러오지 못했어요. 잠시 후 다시 시도해 주세요." };
+  }
+}
+
+export async function patchSurvey(
+  baseUrl: string,
+  accessToken: string,
+  id: string,
+  version: number,
+  answers: SurveyAnswers,
+  fetchImpl: typeof fetch = fetch,
+): Promise<DetailResult> {
+  const url = buildDetailUrl(baseUrl, id);
+  if (!url || !Number.isSafeInteger(version) || version < 1) {
+    return { state: "failed", message: "사전조사 수정 정보를 확인해 주세요." };
+  }
+  try {
+    const response = await fetchImpl(url, {
+      method: "PATCH", cache: "no-store", redirect: "error",
+      headers: {
+        Accept: "application/json", "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`, "Idempotency-Key": crypto.randomUUID(),
+      },
+      body: JSON.stringify({ answers, expected_version: version }),
+      signal: AbortSignal.timeout(SUBMIT_TIMEOUT_MS),
+    });
+    return parseDetailResponse(response, id);
+  } catch {
+    return { state: "failed", message: UNKNOWN_MESSAGE };
+  }
 }

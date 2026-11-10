@@ -19,7 +19,7 @@ export default function PausedPage() {
   return <>
     <PageIntro eyebrow="PAUSED" title="잠시, 불을 낮추고." />
     <div className="hm-game-art hm-pause-art"><Gem state={stage.gem} label="잠시 세공을 멈춘 보석" /><p>THE FORGE RESTS</p></div>
-    <Card className="hm-pause-card"><span className="hm-small-label">일시정지</span><h2>쉬어가도 괜찮아요.</h2><p>{stage.name} · {workout.repetitions} / {stage.target}회<br />이어서 하면 중단한 단계에서 진행해요.</p><Button className="hm-action-button hm-secondary-button" onClick={() => { setWorkout((value) => ({ ...value, status: "abandoned" })); router.push("/records"); }}>이번 운동 포기하기</Button><p className="hm-helper">포기하면 게임이 종료되며<br />운동 후 설문은 진행하지 않아요.</p></Card>
+    <Card className="hm-pause-card"><span className="hm-small-label">일시정지</span><h2>쉬어가도 괜찮아요.</h2><p>{stage.name} · {workout.repetitions} / {stage.target}회<br />이어서 하면 중단한 단계에서 진행해요.</p><Button className="hm-action-button hm-secondary-button" onClick={() => { setWorkout((value) => ({ ...value, status: "abandoned" })); router.push("/records?state=populated"); }}>이번 운동 포기하기</Button><p className="hm-helper">포기하면 게임이 종료되며<br />운동 후 설문은 진행하지 않아요.</p></Card>
     <ActionBar><Button className="hm-action-button" onClick={() => { setWorkout((value) => ({ ...value, status: "preview" })); router.push("/workout"); }}>이어서 운동하기</Button></ActionBar>
   </>;
 }
