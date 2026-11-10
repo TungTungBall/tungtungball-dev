@@ -70,7 +70,7 @@ async function cleanup() {
 }
 for (const signal of ["SIGTERM", "SIGINT"]) process.on(signal, () => { void cleanup().finally(() => process.exit(0)); });
 try {
-  container = docker(["run", "--rm", "-d", "--name", "healthmith-browser-" + randomUUID(), "-e", "POSTGRES_PASSWORD=isolated-admin", "-p", "127.0.0.1::5432", "postgres:17-alpine"]);
+  container = docker(["run", "--rm", "-d", "--name", "healthmith-browser-" + randomUUID(), "--label", "healthmith.test=workout-browser", "-e", "POSTGRES_PASSWORD=isolated-admin", "-p", "127.0.0.1::5432", "postgres:17-alpine"]);
   let postgresReady = false;
   for (let i = 0; i < 60; i++) {
     // initdb의 임시 Unix-socket 서버가 아니라 재기동 후 TCP 서버를 기다린다.

@@ -12,7 +12,7 @@ export default defineConfig({
     { name: "chromium-mobile", use: { ...devices["Pixel 7"] } },
   ],
   webServer: [
-    { command: "node tests/fixtures/workout-stack.mjs", url: "http://127.0.0.1:8091/health", reuseExistingServer: false, timeout: 120_000 },
+    { command: "node tests/fixtures/workout-stack.mjs", url: "http://127.0.0.1:8091/health", reuseExistingServer: false, timeout: 120_000, gracefulShutdown: { signal: "SIGTERM", timeout: 10_000 } },
     { command: "pnpm start --hostname 127.0.0.1", url: baseURL, reuseExistingServer: false,
       env: { APP_URL: baseURL, SUPABASE_URL: "http://127.0.0.1:8091", SUPABASE_PUBLISHABLE_KEY: "isolated-test-key", BACKEND_API_URL: "http://127.0.0.1:8081", POSE_REPETITION_RULES: JSON.stringify({ TEST_EX: rule }) } },
   ],
