@@ -6,7 +6,8 @@ import { loginPreviewStates } from "@/lib/healthmith/login-preview";
 
 export default function DesignIndexPage() {
   return <>
-    <PageIntro eyebrow="MOBILE V2 · VIOLET & EMERALD" title="빛나는 보석, 가벼운 시작." description="나의 운동 여정과 로그인 화면을 둘러보세요." />
+    <PageIntro eyebrow="DESIGN PREVIEW" title="화면 디자인 예시" description="아래 운동·보석 화면은 저장된 운동과 별개의 예시예요." />
+    <section className="hm-gallery-section"><h2>실제 서비스 시작하기</h2><div className="hm-choice-grid"><Link className="hm-action hm-action-secondary" href="/survey">사전조사 입력</Link><Link className="hm-action hm-action-secondary" href="/workout?connected=1">진행 중인 운동</Link><Link className="hm-action hm-action-secondary" href="/records">저장된 운동 기록</Link></div></section>
     <section className="hm-gallery-section"><h2>Google 로그인 · 화면 미리보기</h2><div className="hm-login-previews">{loginPreviewStates.map(({ state, label }) => <Link key={state} className="hm-action hm-action-secondary" href={state === "idle" ? "/login" : `/login?state=${state}`}>{label}</Link>)}</div></section>
     <div className="hm-screen-list">{previewScreens.map((screen) => <Link key={screen.id} href={screen.href} className="hm-card hm-screen-link"><span>{screen.id}</span><div><h2>{screen.title}</h2><p>{screen.label}</p></div><ArrowUpRight size={17} /></Link>)}</div>
     <section className="hm-gallery-section"><h2>보석의 열두 가지 표정</h2><Link href="/gems" className="hm-card hm-screen-link"><div><h2>진행 단계와 보석 상태</h2><p>원석부터 에메랄드까지, 12종의 SVG 시안</p></div><ArrowUpRight size={17} /></Link></section>
