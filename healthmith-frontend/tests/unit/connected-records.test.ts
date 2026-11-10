@@ -20,6 +20,15 @@ beforeEach(() => {
 });
 
 describe("조회한 운동 기록의 표시", () => {
+  it("로그인이 없으면 실제 기록 조회 없이 로그인과 별도 예시 화면을 안내한다", async () => {
+    mocks.session.mockResolvedValue({ state: "anonymous" });
+    const html = renderToStaticMarkup(await ConnectedRecordsView());
+    expect(html).toContain("나의 운동 기록");
+    expect(html).toContain("/records?state=populated");
+    expect(html).not.toContain("11.02 ◆ 에메랄드");
+    expect(mocks.backend).not.toHaveBeenCalled();
+  });
+
   it("완료하고 설문을 아직 쓰지 않은 운동만 해당 세션 설문으로 연결한다", async () => {
     const html = renderToStaticMarkup(await ConnectedRecordsView());
     expect(html).toContain(`/feedback?sessionId=${id}`);

@@ -14,6 +14,10 @@ test("기록 기본 화면은 로그인 없이 예시를 실제 기록으로 보
   await expect(page.getByRole("heading", { name: "나의 운동 기록" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Google로 로그인", exact: true })).toHaveAttribute("href", "/login?next=%2Frecords");
   await expect(page.getByText("11.02 ◆ 에메랄드", { exact: true })).toHaveCount(0);
+  await page.getByRole("link", { name: "예시 기록 미리보기", exact: true }).click();
+  await expect(page).toHaveURL(/\/records\?state=populated$/);
+  await expect(page.getByText("표시된 기록은 디자인 예시예요.", { exact: true })).toBeVisible();
+  await expect(page.getByText("11.02 ◆ 에메랄드", { exact: true })).toBeVisible();
 });
 
 test("생성 상태 조회는 로그인 없이 완료 초안을 만들지 않는다", async ({ page }) => {
