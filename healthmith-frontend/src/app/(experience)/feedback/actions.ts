@@ -45,14 +45,14 @@ export async function submitWorkoutFeedback(sessionId: string, input: unknown): 
     if (response.status !== 201) return { state: "failed", message: "설문을 저장하지 못했어요. 입력과 운동 상태를 확인해 주세요." };
     const body: unknown = await response.json();
     if (!isRecord(body) || !isRecord(body.feedback) || body.feedback.session_id !== sessionId
-      || typeof body.safety_notice !== "string"
+      || (body.safety_notice !== null && typeof body.safety_notice !== "string")
       || (body.next_generation_request_id !== null && (typeof body.next_generation_request_id !== "string" || !UUID.test(body.next_generation_request_id)))) {
       return { state: "failed", message: "저장 응답을 확인하지 못했어요." };
     }
     return {
       state: "saved",
       next_generation_request_id: body.next_generation_request_id,
-      safety_notice: body.safety_notice,
+      safety_notice: body.safety_notice ?? "",
     };
   } catch {
     return { state: "failed", message: "설문 저장 결과를 확인할 수 없어요. 기록을 다시 확인해 주세요." };

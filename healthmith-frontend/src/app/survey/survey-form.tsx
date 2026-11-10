@@ -62,6 +62,7 @@ export function SurveyForm() {
   const [result, setResult] = useState<SubmitResult | null>(null);
   const [editing, setEditing] = useState<SurveyDetail | null>(null);
   const [editMessage, setEditMessage] = useState<string | null>(null);
+  const [needsReload, setNeedsReload] = useState(false);
   const [generationMessage, setGenerationMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -77,9 +78,28 @@ export function SurveyForm() {
 
   const describedBy = (field: FormField) => (errors[field] ? `${field}-error` : undefined);
 
+  const openSavedSurvey = (id: string) => startTransition(async () => {
+    const detail = await loadSurvey(id);
+    if (detail.state === "loaded") {
+      setEditing(detail.submission);
+      setInput({
+        limitationsPresent: detail.submission.answers.physical_limitations.present,
+        limitationParts: detail.submission.answers.physical_limitations.body_parts,
+        purposeType: detail.submission.answers.purpose.type,
+        customText: detail.submission.answers.purpose.custom_text ?? "",
+        intensity: String(detail.submission.answers.intensity),
+        priorityParts: detail.submission.answers.priority_body_parts,
+      });
+      setErrors({});
+      setEditMessage(null);
+      setNeedsReload(false);
+      setResult(null);
+    } else setEditMessage(detail.message);
+  });
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (pending) return;
+    if (pending || needsReload) return;
     const validation = validateSurvey(input);
     if (!validation.ok) {
       setErrors(validation.errors);
@@ -98,6 +118,7 @@ export function SurveyForm() {
             setEditMessage(null);
           } else {
             setEditMessage(response.message);
+            setNeedsReload(response.state === "conflict");
           }
         } else {
           const response = await submitSurvey(input);
@@ -119,7 +140,7 @@ export function SurveyForm() {
           {editing ? "사전조사 내용을 수정했어요" : "사전조사 내용을 저장했어요"}
         </h2>
         <p className="text-sm text-[#717C95]">
-          맞춤 운동 초안은 아직 만들지 않았어요. 초안 만들기는 다음 기능에서 이어집니다.
+          저장한 내용을 확인하고 운동 초안 만들기를 눌러 주세요.
         </p>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
           <dt className="text-[#717C95]">우선 부위</dt>
@@ -133,22 +154,7 @@ export function SurveyForm() {
           type="button"
           disabled={pending}
           className="min-h-11 rounded-xl bg-[#ECE9FF] px-4 text-sm font-medium text-[#202944] disabled:opacity-60"
-          onClick={() => startTransition(async () => {
-            const detail = await loadSurvey(saved.id);
-            if (detail.state === "loaded") {
-              setEditing(detail.submission);
-              setInput({
-                limitationsPresent: detail.submission.answers.physical_limitations.present,
-                limitationParts: detail.submission.answers.physical_limitations.body_parts,
-                purposeType: detail.submission.answers.purpose.type,
-                customText: detail.submission.answers.purpose.custom_text ?? "",
-                intensity: String(detail.submission.answers.intensity),
-                priorityParts: detail.submission.answers.priority_body_parts,
-              });
-              setEditMessage(null);
-              setResult(null);
-            } else setEditMessage(detail.message);
-          })}
+          onClick={() => openSavedSurvey(saved.id)}
         >
           저장한 내용 수정하기
         </button>
@@ -169,11 +175,13 @@ export function SurveyForm() {
         {generationMessage && <p role="alert" className="text-sm text-[#AA4265]">{generationMessage}</p>}
         <button
           type="button"
+          disabled={pending}
           className="min-h-11 rounded-xl border border-[#DFE3F0] px-4 text-sm font-medium"
           onClick={() => {
             setInput(EMPTY_INPUT);
             setEditing(null);
             setEditMessage(null);
+            setNeedsReload(false);
             setGenerationMessage(null);
             setResult(null);
           }}
@@ -329,9 +337,15 @@ export function SurveyForm() {
       </div>
 
       {editMessage && <p role="alert" className="rounded-lg bg-[#FFF0F5] px-3 py-2 text-sm text-[#AA4265]">{editMessage}</p>}
+      {needsReload && editing && <button
+        type="button"
+        disabled={pending}
+        className="min-h-11 rounded-xl border border-[#DFE3F0] px-4 text-sm font-medium"
+        onClick={() => openSavedSurvey(editing.id)}
+      >최신 내용 다시 불러오기 (작성 중인 내용 교체)</button>}
       <button
         type="submit"
-        disabled={pending}
+        disabled={pending || needsReload}
         className="min-h-12 w-full rounded-xl bg-[#7355F5] text-base font-semibold text-white disabled:opacity-60"
       >
         {pending ? (editing ? "수정 중" : "저장 중") : (editing ? "수정 내용 저장" : "사전조사 저장")}

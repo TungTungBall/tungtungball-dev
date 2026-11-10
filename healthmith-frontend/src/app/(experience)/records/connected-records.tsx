@@ -136,7 +136,9 @@ export async function ConnectedRecordsView() {
         <div className="hm-record-row" key={record.session_id}>
           <span>{record.ended_at ? new Date(record.ended_at).toLocaleDateString("ko-KR") : "날짜 미정"} · {recordResultLabel(record.result)}</span>
           <span>{record.completed_stage_count ?? 0} / 5 단계</span>
-          {record.feedback_status === "submitted"
+          {record.result === "abandoned"
+            ? <span>포기한 운동은 설문 없이 마무리돼요.</span>
+            : record.feedback_status === "submitted"
             ? <span>설문 완료</span>
             : <Link className="hm-text-link" href={`/feedback?sessionId=${encodeURIComponent(record.session_id)}`}>운동 후 설문</Link>}
         </div>

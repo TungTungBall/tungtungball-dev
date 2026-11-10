@@ -19,8 +19,8 @@ test("smoke: 모바일 V2 홈을 오류나 가로 넘침 없이 표시한다", a
 
 test.describe("US-01 사전조사 입력 · 퍼블리싱 미리보기", () => {
   test("(실패·거절) 부위 충돌·빈 자유 입력을 막고 확인 후 다음 화면으로 이동한다", async ({ page }) => {
-    await page.goto("/");
-    await page.getByRole("link", { name: "첫 여정 시작하기" }).click();
+    await page.goto("/design");
+    await page.getByRole("link", { name: /내 몸에 맞는 시작/ }).click();
     await page.getByRole("button", { name: "있어요", exact: true }).click();
     await page.getByRole("button", { name: "제약 부위 허리", exact: true }).click();
     await page.getByRole("button", { name: "목표 정하러 가기" }).click();
