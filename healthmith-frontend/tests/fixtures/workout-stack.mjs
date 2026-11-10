@@ -28,8 +28,8 @@ const docker = (args, input) => execFileSync("docker", args, { input, encoding: 
 const sql = (input) => docker(["exec", "-i", container, "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1", "-A", "-t"], input);
 const literal = (v) => "'" + JSON.stringify(v).replaceAll("'", "''") + "'::jsonb";
 const stageNames = ["광석 채굴", "광석 쪼개기", "광석 세척", "광석 가공", "보석 연마"];
-const stages = stageNames.map((stage_name, i) => ({ stage_index: i + 1, stage_name, exercise_id: "TEST_EX", exercise_name: "테스트 운동", target_repetitions: 1, pace_instruction: "테스트 속도", internal_focus_instruction: "테스트 집중 안내" }));
-function reset() {
+function reset(target = 1) {
+  const stages = stageNames.map((stage_name, i) => ({ stage_index: i + 1, stage_name, exercise_id: "TEST_EX", exercise_name: "테스트 운동", target_repetitions: target, pace_instruction: "테스트 속도", internal_focus_instruction: "테스트 집중 안내" }));
   sql(readFileSync(join(backend, "src/test/resources/db/workout-fixtures.sql"), "utf8"));
   const answers = { physical_limitations: { present: false, body_parts: [] }, purpose: { type: "체력", custom_text: null }, intensity: 5, priority_body_parts: ["하체"] };
   const candidates = [{ id: "TEST_EX", name: "테스트 운동", body_parts: ["하체"], internal_focus_instruction: "테스트 집중 안내" }];
@@ -53,7 +53,7 @@ const server = createServer(async (req, res) => {
       const session = { access_token: token(sub), refresh_token: "isolated-refresh-token", token_type: "bearer", expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, user: { id: sub, aud: "authenticated", role: "authenticated", app_metadata: {}, user_metadata: {} } };
       return send(200, { cookie: "base64-" + b64(session), token: session.access_token });
     }
-    if (req.url === "/test/reset" && req.method === "POST") { reset(); return send(200, { curriculumId: curriculumId(), requestId: jobId }); }
+    if (["/test/reset", "/test/reset?repetitions=3"].includes(req.url) && req.method === "POST") { reset(req.url.endsWith("=3") ? 3 : 1); return send(200, { curriculumId: curriculumId(), requestId: jobId }); }
     if (req.url === "/test/allow-reuse" && req.method === "POST") {
       sql(`UPDATE private.runtime_policies SET value='{"allow_reuse":true}'::jsonb WHERE name='workout_start';`);
       return send(200, {});

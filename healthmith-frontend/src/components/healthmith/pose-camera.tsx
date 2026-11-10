@@ -40,21 +40,21 @@ export function PoseCamera({ rule, enabled, onRepetition, onPause }: { rule: Pos
         worker.onerror = () => fail("자세 인식을 시작하지 못했어요. 운동을 일시정지했어요.");
         worker.onmessage = ({ data }: MessageEvent<{ type: string; points?: Landmark[]; time?: number }>) => {
           if (disposed || paused) return;
-          if (data.type === "ready") { clearTimeout(initTimeout); ready = true; lastMotion = performance.now(); setMessage("전신과 주요 관절이 보이도록 서 주세요."); }
+          if (data.type === "ready") { clearTimeout(initTimeout); ready = true; lastMotion = performance.now(); setMessage("측정할 관절이 화면 안에 보이도록 카메라를 고정해 주세요."); }
           else if (data.type === "pose" && data.points && typeof data.time === "number") {
             busy = false;
-            if (!callbacks.current.enabled) { counter.reset(); lastMotion = performance.now(); return; }
+            if (!callbacks.current.enabled) { counter.suspend(); lastMotion = performance.now(); return; }
             const result = counter.update(data.points, data.time);
             if (result.moving) lastMotion = performance.now();
             setMessage(result.tracking ? "움직임을 측정하고 있어요." : "주요 관절이 보이도록 위치와 조명을 조절해 주세요.");
-            if (result.completed) { counter.reset(); callbacks.current.onRepetition(); }
+            if (result.completed) callbacks.current.onRepetition();
           } else if (data.type === "error") fail("자세 인식이 중단돼 운동을 일시정지했어요.");
         };
         worker.postMessage({ type: "init" });
         const frame = async (time: number) => {
           if (disposed || paused) return;
           animation = requestAnimationFrame(frame);
-          if (!callbacks.current.enabled) { counter.reset(); lastMotion = time; return; }
+          if (!callbacks.current.enabled) { counter.suspend(); lastMotion = time; return; }
           if (ready && time - lastMotion >= 30_000) { pause("no_motion"); return; }
           if (!ready || busy || framePending || time - lastFrameTime < 66 || video.readyState < 2 || video.currentTime === lastVideoTime) return;
           lastVideoTime = video.currentTime; lastFrameTime = time; framePending = true;

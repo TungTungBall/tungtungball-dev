@@ -10,7 +10,7 @@ test.beforeEach(async ({ context, request }) => {
   await context.addCookies([{ name: "sb-127-auth-token", value: session.cookie, url: "http://127.0.0.1:3000", httpOnly: true, sameSite: "Lax" }]);
 });
 
-async function begin(page: Page) {
+async function begin(page: Page, target = 1) {
   await page.goto(`/routine/generation/${requestId}`);
   const confirm = page.getByRole("button", { name: "이 루틴 확정하고 준비하기" });
   await expect(confirm).toBeDisabled();
@@ -18,7 +18,7 @@ async function begin(page: Page) {
   await expect(page).toHaveURL(new RegExp(`/camera\\?curriculumId=${curriculumId}`));
   await page.getByRole("button", { name: "카메라 허용하고 운동 시작" }).click();
   await expect(page).toHaveURL(/\/workout\?sessionId=/);
-  await expect(page.getByText("0 / 1", { exact: true })).toBeVisible();
+  await expect(page.getByText(`0 / ${target}`, { exact: true })).toBeVisible();
   return new URL(page.url()).searchParams.get("sessionId")!;
 }
 
@@ -146,6 +146,37 @@ test("카메라 반복 신호→실제 5단계 완료→보석·설문·기록�
   await expect(page).toHaveURL(/\/workout\?sessionId=/);
   expect(new URL(page.url()).searchParams.get("sessionId")).not.toBe(id);
   await expect(page.getByText("0 / 1", { exact: true })).toBeVisible();
+});
+
+test("같은 단계의 연속 반복은 서버 응답 직후에도 다음 왕복을 놓치지 않는다", async ({ page, request }) => {
+  const reset = await request.post("http://127.0.0.1:8091/test/reset?repetitions=3");
+  expect(reset.ok()).toBe(true);
+  ({ requestId, curriculumId } = await reset.json());
+  await syntheticPose(page);
+  const id = await begin(page, 3);
+  await expect(page.getByRole("status")).toContainText("움직임을 측정");
+  await page.route("**/workout?sessionId=*", async (route) => {
+    if (route.request().method() !== "POST") { await route.continue(); return; }
+    const response = await route.fetch();
+    // 응답을 돌려주기 전에 다음 수축을 시작해, 대기 시간이나 expect 폴링 속도에 의존하지 않는다.
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent("fixture-angle", { detail: 80 })));
+    await route.fulfill({ response });
+  });
+  await repetition(page);
+  await expect(page.getByText("1 / 3", { exact: true })).toBeVisible();
+  for (let count = 2; count <= 3; count++) {
+    // 응답 뒤 펼침 자세를 다시 2프레임 유지시키지 않고 바로 다음 수축을 시작한다.
+    await page.waitForTimeout(220);
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent("fixture-angle", { detail: 160 })));
+    if (count === 2) {
+      await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
+      await expect(page.locator(".hm-eyebrow")).toContainText("STAGE 1 / 5");
+    }
+  }
+  await expect(page.locator(".hm-eyebrow")).toContainText("STAGE 2 / 5");
+  const session = await (await request.get(`http://127.0.0.1:8081/api/workout-sessions/${id}`, { headers: { Authorization: `Bearer ${ownerToken}` } })).json();
+  expect(session.completed_stage_count).toBe(1);
+  expect(session.stage_results[0].completed_repetitions).toBe(3);
 });
 
 test("반복 저장 응답 유실 후 같은 이벤트 재시도는 횟수를 두 번 올리지 않는다", async ({ page, request }) => {

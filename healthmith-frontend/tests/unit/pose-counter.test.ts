@@ -42,6 +42,54 @@ describe("관절 각도와 반복 판정", () => {
     counter.reset();
     expect(counter.update(pose(160), 1000).completed).toBe(false);
   });
+  it.each(["missing", "confidence"])("짧은 %s 누락은 확인한 자세만 유지하고 유실 중에는 횟수를 올리지 않는다", (reason) => {
+    const counter = new RepetitionCounter(rule);
+    [160, 160, 80, 80].forEach((a, i) => counter.update(pose(a), i * 100));
+    const missing = reason === "missing" ? [] : pose(160);
+    if (reason === "confidence") missing[1].visibility = .1;
+    expect(counter.update(missing, 400).completed).toBe(false);
+    expect(counter.update(pose(160), 500).completed).toBe(false);
+    expect(counter.update(pose(160), 600).completed).toBe(true);
+    expect(counter.update(pose(160), 700).completed).toBe(false);
+  });
+  it("누락 프레임이 계속 와도 마지막 유효 프레임부터 공백 상한을 계산한다", () => {
+    const counter = new RepetitionCounter(rule);
+    [160, 160, 80, 80].forEach((a, i) => counter.update(pose(a), i * 100));
+    for (const t of [400, 500, 600, 700, 800]) expect(counter.update([], t).completed).toBe(false);
+    expect(counter.update(pose(160), 900).completed).toBe(false);
+    expect(counter.update(pose(160), 1000).completed).toBe(false);
+  });
+  it("화면 밖 관절은 짧은 누락 유예 없이 판정을 초기화한다", () => {
+    const counter = new RepetitionCounter(rule);
+    [160, 160, 80, 80].forEach((a, i) => counter.update(pose(a), i * 100));
+    const p = pose(160); p[1].in_frame = false;
+    counter.update(p, 400);
+    expect(counter.update(pose(160), 500).completed).toBe(false);
+    expect(counter.update(pose(160), 600).completed).toBe(false);
+  });
+  it("누락 전후의 프레임을 연속 자세 확인으로 합치지 않는다", () => {
+    const counter = new RepetitionCounter(rule);
+    [160, 160, 80].forEach((a, i) => counter.update(pose(a), i * 100));
+    counter.update([], 300);
+    counter.update(pose(80), 400);
+    expect(counter.update(pose(160), 500).completed).toBe(false);
+    expect(counter.update(pose(160), 600).completed).toBe(false);
+  });
+  it("1회 후 짧은 서버 대기에도 펼침 기준점을 보존해 다음 왕복을 센다", () => {
+    const counter = new RepetitionCounter(rule);
+    [160, 160, 120, 80, 80, 120, 160].forEach((a, i) => counter.update(pose(a), i * 100));
+    expect(counter.update(pose(160), 700).completed).toBe(true);
+    counter.suspend();
+    const results = [80, 80, 120, 160, 160].map((a, i) => counter.update(pose(a), 800 + i * 100));
+    expect(results.filter((r) => r.completed)).toHaveLength(1);
+  });
+  it("서버 대기가 공백 상한보다 길면 이전 왕복과 연결하지 않는다", () => {
+    const counter = new RepetitionCounter(rule);
+    [160, 160, 80, 80, 160, 160].forEach((a, i) => counter.update(pose(a), i * 100));
+    counter.suspend();
+    const results = [80, 80, 160, 160].map((a, i) => counter.update(pose(a), 1000 + i * 100));
+    expect(results.some((r) => r.completed)).toBe(false);
+  });
   it("미등록·잘못된 관절/각도/신뢰도/시간 규칙을 활성화하지 않는다", () => {
     expect(parsePoseRule(rule)).toEqual(rule);
     for (const bad of [null, {}, { ...rule, joints: [0, 0, 2] }, { ...rule, contracted_angle: 170 }, { ...rule, min_visibility: 0 }, { ...rule, stable_frames: 0 }, { ...rule, max_gap_ms: -1 }]) expect(parsePoseRule(bad)).toBeNull();

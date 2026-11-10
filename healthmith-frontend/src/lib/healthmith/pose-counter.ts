@@ -27,20 +27,28 @@ export class RepetitionCounter {
   private phase: "unready" | "extended" | "contracted" = "unready";
   private stable = 0;
   private lastTime = -Infinity;
+  private lastValidTime = -Infinity;
   private cycleStart = 0;
   private lastAngle: number | null = null;
   constructor(private readonly rule: PoseRule) {}
-  reset() { this.phase = "unready"; this.stable = 0; this.lastAngle = null; }
+  reset() { this.phase = "unready"; this.stable = 0; this.lastAngle = null; this.lastValidTime = -Infinity; }
+  suspend() { this.stable = 0; this.lastAngle = null; }
   update(points: Landmark[], time: number): { completed: boolean; tracking: boolean; moving: boolean } {
     const empty = { completed: false, tracking: false, moving: false };
     if (!Number.isFinite(time) || time <= this.lastTime) return empty;
-    if (time - this.lastTime > this.rule.max_gap_ms) this.reset();
+    if (time - this.lastValidTime > this.rule.max_gap_ms) this.reset();
     this.lastTime = time;
     const joints = this.rule.joints.map((i) => points[i]);
-    if (joints.some((p) => !p || !p.in_frame || !Number.isFinite(p.visibility) || p.visibility < this.rule.min_visibility
-      || ![p.x, p.y, p.z].every(Number.isFinite))) { this.reset(); return empty; }
+    if (joints.some((p) => p && (!p.in_frame || ![p.x, p.y, p.z].every(Number.isFinite)))) {
+      this.reset(); return empty;
+    }
+    if (joints.some((p) => !p || !Number.isFinite(p.visibility) || p.visibility < this.rule.min_visibility)) {
+      // 짧은 추적 누락 동안 확인한 자세만 유지한다. 누락된 동작을 보간하지 않는다.
+      this.stable = 0; return empty;
+    }
     const angle = jointAngle(joints[0], joints[1], joints[2]);
     if (angle === null) { this.reset(); return empty; }
+    this.lastValidTime = time;
     const moving = this.lastAngle !== null && Math.abs(angle - this.lastAngle) >= this.rule.movement_degrees;
     if (this.lastAngle === null || moving) this.lastAngle = angle;
     const contracted = angle <= this.rule.contracted_angle, extended = angle >= this.rule.extended_angle;
