@@ -29,6 +29,7 @@ export function ConnectedWorkout({ sessionId }: { sessionId?: string }) {
   useEffect(() => { sessionRef.current = session; }, [session]);
   const accept = useCallback((s: WorkoutSession) => {
     setSession(s); sessionRef.current = s;
+    if (s.status !== "in_progress") setPauseRequested(null);
     if (s.status === "completed" || s.status === "abandoned") router.replace(`/workout/complete?sessionId=${encodeURIComponent(s.id)}`);
   }, [router]);
   const reload = useCallback(async () => {

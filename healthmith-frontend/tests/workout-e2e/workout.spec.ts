@@ -55,17 +55,37 @@ async function repetition(page: Page) {
   await page.evaluate(() => window.dispatchEvent(new CustomEvent("fixture-angle", { detail: 160 })));
 }
 
-test("실제 MediaPipe WASM·모델을 worker에서 기동하고 카메라를 일시정지·복원한다", async ({ page }) => {
+test("실제 MediaPipe WASM·모델을 worker에서 기동하고 카메라를 일시정지·복원한다", async ({ page, request }) => {
   const errors: string[] = []; page.on("pageerror", (e) => errors.push(e.message));
   const id = await begin(page);
   await expect(page.getByRole("status")).toContainText(/주요 관절|움직임을 측정/, { timeout: 30_000 });
+  let hidWhileSaving = false;
+  await page.route("**/workout?sessionId=*", async (route) => {
+    if (!hidWhileSaving && route.request().method() === "POST" && route.request().postData()?.includes('"pause"')) {
+      hidWhileSaving = true;
+      const response = await route.fetch();
+      // 수동 중단 응답 대기 중 화면 숨김 중단도 큐에 들어오는 경합을 재현한다.
+      await page.evaluate(() => {
+        Object.defineProperty(document, "hidden", { configurable: true, get: () => true });
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+      await route.fulfill({ response });
+    } else await route.continue();
+  });
+  await page.getByRole("button", { name: "잠시 쉬어가기" }).click();
+  await expect(page.getByRole("heading", { name: "잠시 쉬고 있어요" })).toBeVisible();
+  await page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, get: () => false }); });
+  await expect(page.getByText("0 / 1", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "이어서 운동하기" }).click();
+  await expect(page.getByRole("heading", { name: "광석 채굴", exact: true })).toBeVisible();
+  await page.waitForTimeout(200);
+  const resumed = await (await request.get(`http://127.0.0.1:8081/api/workout-sessions/${id}`, { headers: { Authorization: `Bearer ${ownerToken}` } })).json();
+  expect(resumed).toMatchObject({ status: "in_progress", version: 3 });
+  expect(hidWhileSaving).toBe(true);
   await page.getByRole("button", { name: "잠시 쉬어가기" }).click();
   await expect(page.getByRole("heading", { name: "잠시 쉬고 있어요" })).toBeVisible();
   await page.reload();
   await expect(page.getByText("0 / 1", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "이어서 운동하기" }).click();
-  await expect(page.getByRole("heading", { name: "광석 채굴", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "잠시 쉬어가기" }).click();
   await page.getByRole("button", { name: "이번 운동 포기하기" }).click();
   await expect(page).toHaveURL(new RegExp(`/workout/complete\\?sessionId=${id}`));
   await expect(page.getByText("포기한 운동은 설문 없이 마무리돼요.")).toBeVisible();
