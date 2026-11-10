@@ -21,7 +21,9 @@ MediaPipe Tasks Vision `1.2.2`를 사용한다. [공식 Web 안내](https://deve
 
 `pnpm dev`·`pnpm build` 전에 SDK의 WASM과 모델을 자동 준비한다. 수동 명령은 `pnpm prepare:pose`다. 모델은 Google의 `pose_landmarker_lite/float16/1` 경로와 SHA-256 `59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a`로 고정한다. 최초 준비에는 네트워크가 필요하고 이후 같은 체크섬의 파일을 재사용한다. 생성된 `public/mediapipe/`는 Git에 넣지 않으며 브라우저는 같은 사이트의 자산만 사용한다.
 
-Next.js 서버의 `POSE_REPETITION_RULES`에는 운동 ID별 JSON을 넣는다. 현재 운동의 공개 가능한 규칙만 브라우저에 전달한다. **기본 규칙은 비어 있다.** 제공받은 `squat`, `push_up`, `lunge` 카탈로그에는 반복 횟수 범위가 있지만 카메라 각도·신뢰도 판정값은 없으므로 자동으로 확정하지 않았다.
+푸시업(`push_up`)은 기본으로 고정된 카메라의 화면 중앙에서 상체가 내려갔다가 올라오는 움직임을 센다. 양쪽 배경이 함께 움직이거나 프레임이 끊기면 진행 중인 판정을 초기화한다. 카메라를 움직이지 않고 화면 중앙에서 운동한다. 이 방식은 화면의 왕복 움직임을 측정하므로 팔꿈치 각도나 자세 품질을 확인할 때는 관절 규칙을 사용한다.
+
+다른 운동의 카메라 규칙은 Next.js 서버의 `POSE_REPETITION_RULES`에 운동 ID별 JSON으로 등록한다. 기존 푸시업 관절 규칙도 계속 지원하며, 등록된 푸시업을 화면 움직임 판정으로 전환하려면 `"push_up": {"method": "push-up-motion"}`을 설정한다.
 
 | 필드 | 의미 |
 | --- | --- |
