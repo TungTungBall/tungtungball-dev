@@ -3,8 +3,8 @@
 import { getBackendApiUrl } from "@/config/env";
 import { getUserSession } from "@/config/session";
 
-import { postSurvey } from "./submit";
-import type { SubmitResult } from "./types";
+import { getSurvey, patchSurvey, postSurvey } from "./submit";
+import type { DetailResult, SubmitResult } from "./types";
 import { parseFormInput, validateSurvey } from "./validation";
 
 const SIGN_IN_REQUIRED = "로그인이 필요해요. Google로 로그인한 뒤 다시 저장해 주세요.";
@@ -27,4 +27,19 @@ export async function submitSurvey(input: unknown): Promise<SubmitResult> {
   }
 
   return postSurvey(getBackendApiUrl(), session.accessToken, validation.answers);
+}
+
+export async function loadSurvey(id: string): Promise<DetailResult> {
+  const session = await getUserSession();
+  if (session.state !== "authenticated") return { state: "unauthorized", message: SIGN_IN_REQUIRED };
+  return getSurvey(getBackendApiUrl(), session.accessToken, id);
+}
+
+export async function updateSurvey(id: string, version: number, input: unknown): Promise<DetailResult> {
+  const formInput = parseFormInput(input);
+  const validation = formInput ? validateSurvey(formInput) : null;
+  if (!validation?.ok) return { state: "failed", message: "입력 내용을 확인해 주세요." };
+  const session = await getUserSession();
+  if (session.state !== "authenticated") return { state: "unauthorized", message: SIGN_IN_REQUIRED };
+  return patchSurvey(getBackendApiUrl(), session.accessToken, id, version, validation.answers);
 }

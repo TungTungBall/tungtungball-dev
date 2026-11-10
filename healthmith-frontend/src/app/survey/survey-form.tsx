@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
-import { submitSurvey } from "./actions";
+import { loadSurvey, submitSurvey, updateSurvey } from "./actions";
+import { createCurriculumGeneration } from "./generation-actions";
 import {
   BODY_PARTS,
   FREE_PURPOSE,
@@ -13,6 +15,7 @@ import {
   type FieldErrors,
   type FormField,
   type SubmitResult,
+  type SurveyDetail,
   type SurveyFormInput,
 } from "./types";
 import { fieldFromServerPath, validateSurvey } from "./validation";
@@ -57,7 +60,11 @@ export function SurveyForm() {
   const [input, setInput] = useState<SurveyFormInput>(EMPTY_INPUT);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [result, setResult] = useState<SubmitResult | null>(null);
+  const [editing, setEditing] = useState<SurveyDetail | null>(null);
+  const [editMessage, setEditMessage] = useState<string | null>(null);
+  const [generationMessage, setGenerationMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
 
   const update = (patch: Partial<SurveyFormInput>, cleared: FormField[]) => {
     setInput((current) => ({ ...current, ...patch }));
@@ -83,14 +90,23 @@ export function SurveyForm() {
     setResult(null);
     startTransition(async () => {
       try {
-        const response = await submitSurvey(input);
-        setResult(response);
-        if (response.state === "invalid") setErrors(errorsFromServer(response));
+        if (editing) {
+          const response = await updateSurvey(editing.id, editing.version, input);
+          if (response.state === "loaded") {
+            setEditing(response.submission);
+            setResult({ state: "saved", submission: response.submission });
+            setEditMessage(null);
+          } else {
+            setEditMessage(response.message);
+          }
+        } else {
+          const response = await submitSurvey(input);
+          setResult(response);
+          if (response.state === "invalid") setErrors(errorsFromServer(response));
+        }
       } catch {
-        setResult({
-          state: "unknown",
-          message: "저장되었는지 확인할 수 없어요. 새로 제출하기 전에 잠시 후 다시 확인해 주세요.",
-        });
+        if (editing) setEditMessage("수정 결과를 확인할 수 없어요. 최신 내용을 다시 불러와 주세요.");
+        else setResult({ state: "unknown", message: "저장되었는지 확인할 수 없어요. 새로 제출하기 전에 잠시 후 다시 확인해 주세요." });
       }
     });
   };
@@ -100,7 +116,7 @@ export function SurveyForm() {
     return (
       <section role="status" aria-labelledby="saved-title" className="space-y-4 rounded-2xl border border-[#DFE3F0] bg-white p-6">
         <h2 id="saved-title" className="text-lg font-bold text-[#202944]">
-          사전조사 내용을 저장했어요
+          {editing ? "사전조사 내용을 수정했어요" : "사전조사 내용을 저장했어요"}
         </h2>
         <p className="text-sm text-[#717C95]">
           맞춤 운동 초안은 아직 만들지 않았어요. 초안 만들기는 다음 기능에서 이어집니다.
@@ -115,9 +131,50 @@ export function SurveyForm() {
         </dl>
         <button
           type="button"
+          disabled={pending}
+          className="min-h-11 rounded-xl bg-[#ECE9FF] px-4 text-sm font-medium text-[#202944] disabled:opacity-60"
+          onClick={() => startTransition(async () => {
+            const detail = await loadSurvey(saved.id);
+            if (detail.state === "loaded") {
+              setEditing(detail.submission);
+              setInput({
+                limitationsPresent: detail.submission.answers.physical_limitations.present,
+                limitationParts: detail.submission.answers.physical_limitations.body_parts,
+                purposeType: detail.submission.answers.purpose.type,
+                customText: detail.submission.answers.purpose.custom_text ?? "",
+                intensity: String(detail.submission.answers.intensity),
+                priorityParts: detail.submission.answers.priority_body_parts,
+              });
+              setEditMessage(null);
+              setResult(null);
+            } else setEditMessage(detail.message);
+          })}
+        >
+          저장한 내용 수정하기
+        </button>
+        {editMessage && <p role="alert" className="text-sm text-[#AA4265]">{editMessage}</p>}
+        <button
+          type="button"
+          disabled={pending}
+          className="min-h-12 w-full rounded-xl bg-[#7355F5] px-4 text-base font-semibold text-white disabled:opacity-60"
+          onClick={() => startTransition(async () => {
+            setGenerationMessage(null);
+            const response = await createCurriculumGeneration(saved.id);
+            if (response.state === "ok") router.push(`/routine/generation/${encodeURIComponent(response.job.id)}`);
+            else setGenerationMessage(response.message);
+          })}
+        >
+          {pending ? "초안을 준비하는 중" : "운동 초안 만들기"}
+        </button>
+        {generationMessage && <p role="alert" className="text-sm text-[#AA4265]">{generationMessage}</p>}
+        <button
+          type="button"
           className="min-h-11 rounded-xl border border-[#DFE3F0] px-4 text-sm font-medium"
           onClick={() => {
             setInput(EMPTY_INPUT);
+            setEditing(null);
+            setEditMessage(null);
+            setGenerationMessage(null);
             setResult(null);
           }}
         >
@@ -271,12 +328,13 @@ export function SurveyForm() {
         {!pending && result && <p className="rounded-lg bg-[#FFF0F5] px-3 py-2 text-[#AA4265]">{result.message}</p>}
       </div>
 
+      {editMessage && <p role="alert" className="rounded-lg bg-[#FFF0F5] px-3 py-2 text-sm text-[#AA4265]">{editMessage}</p>}
       <button
         type="submit"
         disabled={pending}
         className="min-h-12 w-full rounded-xl bg-[#7355F5] text-base font-semibold text-white disabled:opacity-60"
       >
-        {pending ? "저장 중" : "사전조사 저장"}
+        {pending ? (editing ? "수정 중" : "저장 중") : (editing ? "수정 내용 저장" : "사전조사 저장")}
       </button>
     </form>
   );

@@ -1,5 +1,5 @@
 import { isBodyPart, isPurposeType } from "./validation";
-import type { SavedSurvey, ServerFieldError, SubmitResult, SurveyAnswers } from "./types";
+import type { SavedSurvey, ServerFieldError, SubmitResult, SurveyAnswers, SurveyDetail } from "./types";
 
 // 서버 응답은 unknown으로 받아 좁힌다 (CODE-STYLE 5번). as 단언으로 넘기지 않는다.
 
@@ -66,6 +66,15 @@ function parseSavedSurvey(body: unknown, sent: SurveyAnswers): SavedSurvey | nul
   if (typeof createdAt !== "string" || Number.isNaN(Date.parse(createdAt))) return null;
   if ("user_id" in body) return null;
   return { id, answers, generation_request_status: status, created_at: createdAt };
+}
+
+export function parseSurveyDetail(body: unknown, expectedId: string): SurveyDetail | null {
+  if (!isRecord(body)) return null;
+  const { id, answers, generation_request_status: status, created_at: createdAt, version } = body;
+  if (id !== expectedId || !isSurveyAnswers(answers)) return null;
+  if (status !== "prepared" || typeof createdAt !== "string" || Number.isNaN(Date.parse(createdAt))) return null;
+  if (typeof version !== "number" || !Number.isSafeInteger(version) || version < 1 || "user_id" in body) return null;
+  return { id, answers, generation_request_status: status, created_at: createdAt, version };
 }
 
 function parseFieldErrors(value: unknown): ServerFieldError[] | null {

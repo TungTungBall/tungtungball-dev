@@ -28,6 +28,9 @@ export type SavedSurvey = {
   created_at: string;
 };
 
+/** GET/PATCH 상세 응답. version은 수정 시 낙관적 동시성 검사에 쓴다. */
+export type SurveyDetail = SavedSurvey & { version: number };
+
 /** 화면 입력 상태. 아직 고르지 않은 값은 null이며 기본값으로 채우지 않는다. */
 export type SurveyFormInput = {
   limitationsPresent: boolean | null;
@@ -52,3 +55,9 @@ export type SubmitResult =
   | { state: "unauthorized"; message: string }
   | { state: "save-failed"; message: string }
   | { state: "unknown"; message: string };
+
+export type DetailResult =
+  | { state: "loaded"; submission: SurveyDetail }
+  | { state: "unauthorized"; message: string }
+  | { state: "conflict"; message: string }
+  | { state: "failed"; message: string };
