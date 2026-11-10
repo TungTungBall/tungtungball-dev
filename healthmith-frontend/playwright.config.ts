@@ -18,6 +18,7 @@ export default defineConfig({
   ],
   webServer: {
     command: "pnpm start --hostname 127.0.0.1",
+    env: { APP_URL: baseURL },
     url: baseURL,
     reuseExistingServer: false,
     timeout: 60_000,

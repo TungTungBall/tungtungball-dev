@@ -26,7 +26,7 @@ export default async function SurveyPage() {
         </header>
         {!signedIn && (
           <p role="note" className="rounded-xl bg-[#ECE9FF] px-4 py-3 text-sm text-[#202944]">
-            로그인 후 저장할 수 있어요. 로그인 기능은 준비 중이라 지금은 입력과 검사만 확인할 수 있어요.
+            로그인 후 저장할 수 있어요. <Link href="/login?next=%2Fsurvey" className="underline underline-offset-4">Google로 로그인하기</Link>
           </p>
         )}
         <SurveyForm />

@@ -122,3 +122,15 @@ CI의 Linux 결과는 팀원 5명의 최종 macOS 실행 확인과 별개입니�
 - E2E에서 포트 사용 중 오류: 3000에서 실행 중인 자신의 서버를 종료하고 다시 실행합니다.
 - 프로덕션 빌드 없음: `pnpm build`를 먼저 실행합니다.
 - 설치 실패: 실행 위치·명령·OS·아키텍처·오류 메시지를 그대로 기록합니다. 잠금 파일을 지워서 해결하지 않습니다.
+
+## Google 로그인
+
+`/login`에서 Google 로그인을 시작하면 Supabase Auth를 거쳐 `/auth/callback`으로 돌아온다. 서버에서 PKCE 코드를 교환하고 검증한 뒤 `/survey`로 이동한다. `next`에는 앱 내부 경로만 허용한다. 세션은 HttpOnly 쿠키에 저장하며 로그아웃은 현재 브라우저 세션에 적용한다.
+
+로컬 설정은 `.env.example`을 참고해 `.env.local`에 넣는다. `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `APP_URL=http://localhost:3000`이 필요하다. Google Client ID와 Secret은 Supabase Dashboard의 Authentication → Sign In / Providers → Google에 등록한다. Google Secret은 프론트엔드에 넣지 않는다.
+
+GCP 웹 OAuth 클라이언트의 리디렉션 URI는 Supabase Google 공급자 화면에 표시된 `/auth/v1/callback` 주소를 사용한다. Supabase의 Site URL에는 앱 origin을, Redirect URLs에는 `http://localhost:3000/auth/callback`과 `http://127.0.0.1:3000/auth/callback`을 등록한다. 요청 권한은 `openid email profile`이다. Google 앱이 테스트 모드라면 계정에 따라 테스트 사용자 등록이 필요할 수 있다.
+
+개발 서버에 접속하는 호스트와 `APP_URL`을 일치시킨다. 실제 배포에서는 HTTPS origin과 정확한 콜백 URL로 설정을 변경한다. 비밀 값 파일은 Git에서 제외한다.
+
+2026-11-10 macOS에서 새 GCP 웹 OAuth 클라이언트와 Supabase Google 공급자를 연결해 실제 Google 로그인 → `/survey` 복귀 → `/login` 재방문 및 새로고침 후 세션 유지 → 로그아웃을 확인했다. 후속 DB 설정 후에는 브라우저 사전조사 저장과 실제 두 계정 JWT의 조회·수정·소유권 차단도 검증했다. 상세 결과는 [백엔드 연동 기록](../healthmith-backend/BACKEND-DEVELOPMENT.md)에 있다. GCP 앱은 외부 테스트 모드이며 배포 도메인 설정·운영 공개, 전체 업무 API의 실서비스 검증은 별도다.
