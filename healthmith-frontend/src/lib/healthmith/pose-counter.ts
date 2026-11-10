@@ -1,6 +1,7 @@
 import { isRecord, positive } from "./workout-contract";
 
 export type PoseRule = { joints: [number, number, number]; contracted_angle: number; extended_angle: number; min_visibility: number; stable_frames: number; min_cycle_ms: number; max_gap_ms: number; movement_degrees: number };
+export type CameraRule = PoseRule | { method: "push-up-motion" };
 export type Landmark = { x: number; y: number; z: number; visibility: number; in_frame: boolean };
 
 /** 운동별 검토한 기준만 등록한다. 운동명으로 판정 규칙을 추측하지 않는다. */

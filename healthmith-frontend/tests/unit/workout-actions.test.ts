@@ -3,7 +3,7 @@ const mocks = vi.hoisted(() => ({ session: vi.fn(), backend: vi.fn() }));
 vi.mock("@/config/session", () => ({ getUserSession: mocks.session }));
 vi.mock("@/lib/backend-api", () => ({ fetchBackendApi: mocks.backend }));
 vi.mock("@/config/env", () => ({ getPoseRuleSettings: () => ({}) }));
-import { changeWorkoutState, confirmWorkoutCurriculum, loadWorkout, loadWorkoutResult, recordWorkoutRepetition, startWorkoutSession } from "@/app/(experience)/workout/actions";
+import { changeWorkoutState, confirmWorkoutCurriculum, loadPoseRule, loadWorkout, loadWorkoutResult, recordWorkoutRepetition, startWorkoutSession } from "@/app/(experience)/workout/actions";
 import { parseWorkoutSession } from "@/lib/healthmith/workout-contract";
 
 const id = "10000000-0000-4000-8000-000000000001", cid = "20000000-0000-4000-8000-000000000001", key = "30000000-0000-4000-8000-000000000001";
@@ -13,6 +13,10 @@ const curriculum = { id: cid, version: 2, status: "confirmed", stages: Array.fro
 beforeEach(() => { vi.resetAllMocks(); mocks.session.mockResolvedValue({ state: "authenticated", accessToken: "synthetic-secret" }); });
 
 describe("실제 운동 연결", () => {
+  it("푸시업에는 카메라 움직임 판정을 제공하고 미등록 종목에는 적용하지 않는다", async () => {
+    expect(await loadPoseRule("push_up")).toEqual({ method: "push-up-motion" });
+    expect(await loadPoseRule("unregistered")).toBeNull();
+  });
   it("사용자 확인을 받은 확정 명령만 보내며 자동 시작하지 않는다", async () => {
     mocks.backend.mockResolvedValue(Response.json(curriculum));
     expect((await confirmWorkoutCurriculum(cid, 1, key)).state).toBe("ok");

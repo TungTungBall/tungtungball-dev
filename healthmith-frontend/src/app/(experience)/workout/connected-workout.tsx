@@ -7,14 +7,14 @@ import { ActionBar, ActionLink, Notice, PageIntro } from "@/components/healthmit
 import { PoseCamera } from "@/components/healthmith/pose-camera";
 import { changeWorkoutState, loadPoseRule, loadWorkout, recordWorkoutRepetition } from "./actions";
 import { commandKey } from "@/lib/healthmith/command-key";
-import type { PoseRule } from "@/lib/healthmith/pose-counter";
+import type { CameraRule } from "@/lib/healthmith/pose-counter";
 import type { WorkoutCurriculum, WorkoutSession } from "@/lib/healthmith/workout-contract";
 
 type PendingCommand = { kind: "repetition" | "pause" | "resume" | "abandon"; session: WorkoutSession; key: string; reason?: "manual" | "no_motion" };
 export function ConnectedWorkout({ sessionId }: { sessionId?: string }) {
   const [session, setSession] = useState<WorkoutSession | null>(null);
   const [curriculum, setCurriculum] = useState<WorkoutCurriculum | null>(null);
-  const [rule, setRule] = useState<PoseRule | null>(null);
+  const [rule, setRule] = useState<CameraRule | null>(null);
   const [ruleExerciseId, setRuleExerciseId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);

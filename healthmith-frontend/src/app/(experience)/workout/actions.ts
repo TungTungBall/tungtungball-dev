@@ -2,7 +2,7 @@
 
 import { getUserSession } from "@/config/session";
 import { getPoseRuleSettings } from "@/config/env";
-import { parsePoseRule, type PoseRule } from "@/lib/healthmith/pose-counter";
+import { parsePoseRule, type CameraRule } from "@/lib/healthmith/pose-counter";
 import { fetchBackendApi } from "@/lib/backend-api";
 import { isRecord, parseWorkoutCurriculum, parseWorkoutSession, positive, UUID, workoutErrorMessage, type WorkoutCurriculum, type WorkoutSession } from "@/lib/healthmith/workout-contract";
 
@@ -25,18 +25,25 @@ async function request<T>(path: string, parse: (value: unknown) => T | null, bod
 }
 const invalid = { state: "failed" as const, message: "운동 요청 정보를 확인해 주세요." };
 
-export async function loadPoseRule(exerciseId: string): Promise<PoseRule | null> {
+export async function loadPoseRule(exerciseId: string): Promise<CameraRule | null> {
   if (typeof exerciseId !== "string" || exerciseId.length > 200) return null;
   const settings = getPoseRuleSettings();
-  return isRecord(settings) && Object.hasOwn(settings, exerciseId) ? parsePoseRule(settings[exerciseId]) : null;
+  if (isRecord(settings) && Object.hasOwn(settings, exerciseId)) {
+    const configured = settings[exerciseId];
+    if (exerciseId === "push_up" && isRecord(configured) && configured.method === "push-up-motion") {
+      return { method: "push-up-motion" };
+    }
+    return parsePoseRule(configured);
+  }
+  return exerciseId === "push_up" ? { method: "push-up-motion" } : null;
 }
 
-export async function loadConfirmedWorkout(id: string): Promise<Result<{ curriculum: WorkoutCurriculum; rules: Record<string, PoseRule> }>> {
+export async function loadConfirmedWorkout(id: string): Promise<Result<{ curriculum: WorkoutCurriculum; rules: Record<string, CameraRule> }>> {
   if (!UUID.test(id)) return invalid;
   const c = await request(`curricula/${id}`, parseWorkoutCurriculum);
   if (c.state !== "ok") return c;
   if (c.data.id !== id || c.data.status !== "confirmed") return invalid;
-  const rules: Record<string, PoseRule> = {};
+  const rules: Record<string, CameraRule> = {};
   for (const stage of c.data.stages) {
     const rule = await loadPoseRule(stage.exercise_id);
     if (rule) rules[stage.exercise_id] = rule;

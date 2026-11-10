@@ -1,9 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { RepetitionCounter, type Landmark, type PoseRule } from "@/lib/healthmith/pose-counter";
+import { RepetitionCounter, type Landmark, type CameraRule } from "@/lib/healthmith/pose-counter";
 
-export function PoseCamera({ rule, enabled, onRepetition, onPause }: { rule: PoseRule; enabled: boolean; onRepetition: () => void; onPause: (reason: "manual" | "no_motion") => void }) {
+type CameraMessage =
+  | { type: "ready" }
+  | { type: "error" }
+  | { type: "pose"; points: Landmark[]; time: number }
+  | { type: "motion"; completed: boolean; moving: boolean; tracking: boolean };
+
+export function PoseCamera({ rule, enabled, onRepetition, onPause }: { rule: CameraRule; enabled: boolean; onRepetition: () => void; onPause: (reason: "manual" | "no_motion") => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const callbacks = useRef({ onRepetition, onPause, enabled });
   const [message, setMessage] = useState("카메라와 자세 인식을 준비하고 있어요.");
@@ -13,10 +19,10 @@ export function PoseCamera({ rule, enabled, onRepetition, onPause }: { rule: Pos
     let stream: MediaStream | undefined, worker: Worker | undefined, animation = 0;
     let lastVideoTime = -1, lastFrameTime = 0, lastMotion = performance.now();
     let paused = false;
-    const counter = new RepetitionCounter(rule);
+    const counter = "method" in rule ? null : new RepetitionCounter(rule);
     const pause = (reason: "manual" | "no_motion") => {
       if (disposed || paused) return;
-      paused = true; ready = false; counter.reset();
+      paused = true; ready = false; counter?.reset();
       stream?.getTracks().forEach((t) => t.stop());
       callbacks.current.onPause(reason);
     };
@@ -36,32 +42,57 @@ export function PoseCamera({ rule, enabled, onRepetition, onPause }: { rule: Pos
         if (!video) return;
         video.srcObject = stream; await video.play();
         if (disposed || paused) { stream.getTracks().forEach((t) => t.stop()); return; }
-        worker = new Worker("/pose-worker.js");
+        worker = counter
+          ? new Worker("/pose-worker.js")
+          : new Worker("/push-up-worker.mjs", { type: "module" });
         worker.onerror = () => fail("자세 인식을 시작하지 못했어요. 운동을 일시정지했어요.");
-        worker.onmessage = ({ data }: MessageEvent<{ type: string; points?: Landmark[]; time?: number }>) => {
+        const guide = counter
+          ? "주요 관절이 보이도록 위치와 조명을 조절해 주세요."
+          : "카메라를 고정하고 화면 중앙에서 푸시업을 해 주세요.";
+        worker.onmessage = ({ data }: MessageEvent<CameraMessage>) => {
           if (disposed || paused) return;
-          if (data.type === "ready") { clearTimeout(initTimeout); ready = true; lastMotion = performance.now(); setMessage("측정할 관절이 화면 안에 보이도록 카메라를 고정해 주세요."); }
-          else if (data.type === "pose" && data.points && typeof data.time === "number") {
-            busy = false;
-            if (!callbacks.current.enabled) { counter.suspend(); lastMotion = performance.now(); return; }
-            const result = counter.update(data.points, data.time);
-            if (result.moving) lastMotion = performance.now();
-            setMessage(result.tracking ? "움직임을 측정하고 있어요." : "주요 관절이 보이도록 위치와 조명을 조절해 주세요.");
-            if (result.completed) callbacks.current.onRepetition();
-          } else if (data.type === "error") fail("자세 인식이 중단돼 운동을 일시정지했어요.");
+          if (data.type === "ready") {
+            clearTimeout(initTimeout);
+            ready = true;
+            lastMotion = performance.now();
+            setMessage(guide);
+            return;
+          }
+          if (data.type === "error") {
+            fail("자세 인식이 중단돼 운동을 일시정지했어요.");
+            return;
+          }
+
+          busy = false;
+          if (!callbacks.current.enabled) {
+            counter?.suspend();
+            lastMotion = performance.now();
+            return;
+          }
+          const result = data.type === "motion" && !counter
+            ? data
+            : data.type === "pose" && counter
+              ? counter.update(data.points, data.time)
+              : null;
+          if (!result) return;
+          if (result.moving) lastMotion = performance.now();
+          setMessage(result.tracking ? "움직임을 측정하고 있어요." : guide);
+          if (result.completed) callbacks.current.onRepetition();
         };
         worker.postMessage({ type: "init" });
         const frame = async (time: number) => {
           if (disposed || paused) return;
           animation = requestAnimationFrame(frame);
-          if (!callbacks.current.enabled) { counter.suspend(); lastMotion = time; return; }
+          if (!callbacks.current.enabled) { counter?.suspend(); lastMotion = time; return; }
           if (ready && time - lastMotion >= 30_000) { pause("no_motion"); return; }
-          if (!ready || busy || framePending || time - lastFrameTime < 66 || video.readyState < 2 || video.currentTime === lastVideoTime) return;
-          lastVideoTime = video.currentTime; lastFrameTime = time; framePending = true;
+          const mediaTime = video.currentTime;
+          const tooSoon = counter ? time - lastFrameTime < 66 : mediaTime - lastVideoTime < 0.06;
+          if (!ready || busy || framePending || tooSoon || video.readyState < 2 || mediaTime === lastVideoTime) return;
+          lastVideoTime = mediaTime; lastFrameTime = time; framePending = true;
           try {
             const bitmap = await createImageBitmap(video);
             if (disposed || paused || !ready) { bitmap.close(); return; }
-            busy = true; worker?.postMessage({ type: "frame", frame: bitmap, time }, [bitmap]);
+            busy = true; worker?.postMessage({ type: "frame", frame: bitmap, time: counter ? time : mediaTime * 1000 }, [bitmap]);
           } catch { fail("카메라 영상을 읽지 못해 운동을 일시정지했어요."); }
           finally { framePending = false; }
         };
