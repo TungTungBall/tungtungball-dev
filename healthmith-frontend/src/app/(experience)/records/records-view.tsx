@@ -21,12 +21,5 @@ export function RecordsView({ mode }: { mode: "populated" | "empty" | "loading" 
 }
 
 export function SignedOutRecordsView() {
-  const { workout } = usePreview();
-  return <>
-    <PageIntro eyebrow="MY CABINET" title="나의 운동 기록" description="로그인하면 저장된 운동과 보석을 확인할 수 있어요." />
-    {workout.status === "abandoned" && <Card className="hm-records-stats">
-      <span className="hm-small-label">이번 화면 미리보기</span>
-      <p>{workout.stageIndex} / 5 포기</p>
-    </Card>}
-  </>;
+  return <PageIntro eyebrow="MY CABINET" title="나의 운동 기록" description="로그인하면 저장된 운동과 보석을 확인할 수 있어요." />;
 }

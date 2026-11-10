@@ -112,6 +112,7 @@ export async function ConnectedRecordsView() {
     return <>
       <SignedOutRecordsView />
       <ActionBar><ActionLink href="/login?next=%2Frecords">Google로 로그인</ActionLink></ActionBar>
+      <p className="hm-helper"><Link className="hm-text-link" href="/records?state=populated">예시 기록 미리보기</Link></p>
     </>;
   }
   if (result.state === "error") {
