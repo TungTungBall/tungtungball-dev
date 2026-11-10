@@ -4,11 +4,15 @@ on:
   pull_request:
     paths:
       - "healthmith-frontend/**"
+      - "healthmith-backend/**"
+      - "supabase/**"
       - ".github/workflows/frontend.yml"
   push:
     branches: [main, "codex/**"]
     paths:
       - "healthmith-frontend/**"
+      - "healthmith-backend/**"
+      - "supabase/**"
       - ".github/workflows/frontend.yml"
 
 permissions:
@@ -45,3 +49,24 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
       - name: Browser smoke tests
         run: pnpm test:e2e
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+          cache-dependency-path: |
+            healthmith-backend/*.gradle
+            healthmith-backend/gradle/wrapper/gradle-wrapper.properties
+      - name: Build real backend for workout browser tests
+        run: ../healthmith-backend/gradlew -p ../healthmith-backend bootJar --no-daemon --console=plain
+      - name: Workout browser integration with isolated PostgreSQL
+        run: pnpm test:workout
+      - name: Save browser test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: frontend-browser-reports
+          path: |
+            healthmith-frontend/playwright-report/
+            healthmith-frontend/test-results/
+          retention-days: 7

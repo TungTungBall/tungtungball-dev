@@ -8,6 +8,12 @@ export function getBackendApiUrl(): string {
   return process.env.BACKEND_API_URL ?? DEFAULT_BACKEND_API_URL;
 }
 
+/** 공개 가능한 운동 ID별 카메라 판정 기준. 운영 운동/임계값은 자동 지정하지 않는다. */
+export function getPoseRuleSettings(): unknown {
+  try { return JSON.parse(process.env.POSE_REPETITION_RULES ?? "{}"); }
+  catch { return null; }
+}
+
 export type SupabaseAuthConfig = {
   url: string;
   publishableKey: string;

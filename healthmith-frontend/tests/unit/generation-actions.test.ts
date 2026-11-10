@@ -18,6 +18,17 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("커리큘럼 생성 연결", () => {
+  it.each([
+    ["NO_ELIGIBLE_EXERCISE", "입력 조건에 맞는 지원 운동이 없어요."],
+    ["GENERATION_UNAVAILABLE", "초안 생성 서비스를 준비 중이에요."],
+    ["POLICY_NOT_CONFIGURED", "운동 운영 기준이 아직 준비되지 않았어요."],
+  ])("생성 준비 오류 %s의 원인을 사용자에게 구분해 알린다", async (code, message) => {
+    mocks.fetch.mockResolvedValue(Response.json({ code, message: "private backend detail" }, { status: 503 }));
+    const result = await createCurriculumGeneration(id);
+    expect(result.state).toBe("failed");
+    expect(JSON.stringify(result)).toContain(message);
+    expect(JSON.stringify(result)).not.toContain("private backend detail");
+  });
   it("사용자 요청에만 생성 명령을 한 번 보내고 토큰을 반환하지 않는다", async () => {
     mocks.fetch.mockResolvedValue(Response.json({ ...job, user_id: "private" }, { status: 202 }));
     expect(await createCurriculumGeneration(id)).toEqual({ state: "ok", job });

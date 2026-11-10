@@ -126,6 +126,7 @@ export async function ConnectedRecordsView() {
   const knownGems = new Map<string, GemState>(gemStates.map((gem) => [gem.state, gem.state]));
   return <>
     <PageIntro eyebrow="MY CABINET" title="쌓여가는 나의 보석들" description="저장된 운동 기록과 보석을 확인해요." />
+    <p><Link className="hm-text-link" href="/workout?connected=1">진행 중인 운동 이어가기</Link></p>
     <div className="hm-stat-grid hm-records-stats">
       <Card><strong>{stats.current_streak_days ?? "—"}일</strong><p>연속 운동일</p></Card>
       <Card><strong>{stats.completed_sessions ?? records.filter((item) => item.result === "completed").length}회</strong><p>완료한 운동</p></Card>

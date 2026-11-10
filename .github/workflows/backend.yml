@@ -40,6 +40,8 @@ jobs:
             healthmith-backend/gradle/wrapper/gradle-wrapper.properties
       - name: Check Docker
         run: docker info
+      - name: Check setup tools
+        run: python3 scripts/test-workout-setup.py
       - name: Tests and executable jar
         id: verify
         run: ./gradlew clean test bootJar --no-daemon --console=plain

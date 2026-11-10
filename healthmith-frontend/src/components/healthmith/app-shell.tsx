@@ -6,7 +6,7 @@ import { useState, type ReactNode } from "react";
 import { Gem as GemIcon, House, Menu, PanelsTopLeft, ScrollText, X, ArrowLeft, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const navigation = [{ href: "/", label: "홈", icon: House }, { href: "/routine", label: "오늘의 운동", icon: GemIcon }, { href: "/records", label: "나의 기록", icon: ScrollText }];
+const navigation = [{ href: "/", label: "홈", icon: House }, { href: "/workout?connected=1", label: "오늘의 운동", icon: GemIcon }, { href: "/records", label: "나의 기록", icon: ScrollText }];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();

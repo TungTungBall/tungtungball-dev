@@ -47,3 +47,6 @@ next-env.d.ts
 /playwright-report/
 /test-results/
 /.vitest/
+
+# lockfile SDK와 검증한 모델로 prepare:pose에서 다시 생성
+/public/mediapipe/

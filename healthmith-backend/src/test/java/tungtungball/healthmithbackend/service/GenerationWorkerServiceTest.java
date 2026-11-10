@@ -36,6 +36,13 @@ class GenerationWorkerServiceTest {
         var config=new GenerationWorkerProperties(true,"SECRET","GEMINI",null,null,null,null,null,null);
         assertThrows(IllegalStateException.class,config::validateEnabled);assertFalse(config.toString().contains("SECRET"));assertFalse(config.toString().contains("GEMINI"));
     }
+    @Test @DisplayName("생성 worker poll 주기가 lease 이상이면 가용성 공백을 막기 위해 기동 거절")
+    void pollMustBeShorterThanLease() {
+        var config = new GenerationWorkerProperties(true,null,"SECRET","test-model",java.time.Duration.ofSeconds(60),java.time.Duration.ofSeconds(10),java.time.Duration.ofMinutes(5),60,1000);
+        assertThrows(IllegalStateException.class, () -> config.validateEnabled(true));
+        var valid = new GenerationWorkerProperties(true,null,"SECRET","test-model",java.time.Duration.ofSeconds(1),java.time.Duration.ofSeconds(10),java.time.Duration.ofMinutes(5),60,1000);
+        assertDoesNotThrow(() -> valid.validateEnabled(true));
+    }
     @Test @DisplayName("US-04 (LLM) 다음 생성은 이전 커리큘럼·승인된 최신 요약 문맥 전달")
     void nextContext() {
         var job=mapper.readTree("""

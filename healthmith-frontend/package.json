@@ -3,16 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/prepare-pose-assets.mjs",
+    "prebuild": "node scripts/prepare-pose-assets.mjs",
+    "prepare:pose": "node scripts/prepare-pose-assets.mjs",
     "dev": "next dev --port 3000",
     "build": "next build",
     "start": "next start --port 3000",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
     "test:unit": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:workout": "playwright test --config=playwright.workout.config.ts"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
+    "@mediapipe/tasks-vision": "1.2.2",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.118.0",
     "class-variance-authority": "0.7.1",
