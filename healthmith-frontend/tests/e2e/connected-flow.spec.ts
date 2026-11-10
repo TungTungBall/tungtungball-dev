@@ -25,6 +25,21 @@ test("생성 상태 조회는 로그인 없이 완료 초안을 만들지 않는
   await expect(page.getByRole("heading", { name: "초안을 불러오지 못했어요" })).toBeVisible();
   await expect(page.getByText("로그인 상태를 확인해 주세요.", { exact: true })).toBeVisible();
   await expect(page.locator(".hm-routine-item")).toHaveCount(0);
+  const url = page.url();
+  await page.getByRole("button", { name: "같은 요청 다시 확인하기" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("로그인 상태를 확인해 주세요.", { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(url);
+  await expect(page.locator(".hm-routine-item")).toHaveCount(0);
+});
+
+test("320px 디자인 목록은 실제 서비스와 예시 경로를 구분한다", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.goto("/design");
+  await expect(page.getByRole("heading", { name: "화면 디자인 예시", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "사전조사 입력", exact: true })).toHaveAttribute("href", "/survey");
+  await expect(page.getByRole("link", { name: "진행 중인 운동", exact: true })).toHaveAttribute("href", "/workout?connected=1");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
 test("잘못된 운동 세션 주소는 설문 대신 기록 복귀를 안내한다", async ({ page }) => {

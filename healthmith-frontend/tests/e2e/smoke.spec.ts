@@ -61,7 +61,7 @@ test("smoke: 일시정지·재개는 횟수를 보존하고 포기 후 재개·�
   await page.getByRole("button", { name: "이번 운동 포기하기" }).click();
   await expect(page.getByText("0 / 5 포기", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "메뉴 열기" }).click();
-  await page.getByRole("link", { name: "화면 둘러보기" }).click();
+  await page.getByRole("link", { name: "화면 디자인 예시" }).click();
   await page.getByRole("link", { name: /오늘의 여정은 어땠나요/ }).click();
   await expect(page.getByText("포기한 운동은 설문 없이 마무리돼요.")).toBeVisible();
 });

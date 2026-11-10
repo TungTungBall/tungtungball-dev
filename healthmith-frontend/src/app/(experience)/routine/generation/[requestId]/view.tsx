@@ -25,6 +25,7 @@ export function GeneratedRoutineView({ requestId }: { requestId: string }) {
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [acknowledged, setAcknowledged] = useState(false);
+  const [reload, setReload] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -52,7 +53,7 @@ export function GeneratedRoutineView({ requestId }: { requestId: string }) {
           return;
         }
         timer = setTimeout(poll, 2_000);
-      } catch { if (active) setMessage("생성 상태를 확인하지 못했어요. 잠시 후 이 주소로 다시 열어 주세요."); }
+      } catch { if (active) setMessage("생성 상태를 확인하지 못했어요. 잠시 후 다시 확인해 주세요."); }
     }
 
     void poll();
@@ -60,12 +61,21 @@ export function GeneratedRoutineView({ requestId }: { requestId: string }) {
       active = false;
       if (timer) clearTimeout(timer);
     };
-  }, [requestId]);
+  }, [requestId, reload]);
 
   if (message) {
     return <>
       <PageIntro eyebrow="YOUR QUEST / 초안 생성" title="초안을 불러오지 못했어요" />
       <Notice danger>{message}</Notice>
+      <Button className="hm-action-button" onClick={() => {
+        setMessage(null);
+        setJob(null);
+        setCurriculum(null);
+        setActionMessage(null);
+        setAcknowledged(false);
+        setReload((value) => value + 1);
+      }}>같은 요청 다시 확인하기</Button>
+      <p className="hm-helper">상태만 다시 조회해요. 새 생성 요청은 보내지 않아요.</p>
       <ActionBar><ActionLink href="/survey">사전조사로 돌아가기</ActionLink></ActionBar>
     </>;
   }

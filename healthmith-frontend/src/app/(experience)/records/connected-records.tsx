@@ -5,6 +5,7 @@ import { ActionBar, ActionLink, Card, Notice, PageIntro } from "@/components/hea
 import { getUserSession } from "@/config/session";
 import { fetchBackendApi } from "@/lib/backend-api";
 import { gemStates, type GemState } from "@/lib/healthmith/preview-data";
+import { parseWorkoutTendency, tendencyStatusMessage, type WorkoutTendency } from "@/lib/healthmith/tendency";
 
 type WorkoutRecord = {
   session_id: string;
@@ -26,7 +27,17 @@ type RecordData = {
   records: WorkoutRecord[];
   gems: UserGem[];
   stats: { completed_sessions: number | null; abandoned_sessions: number | null; current_streak_days: number | null };
+  tendency: WorkoutTendency | "error" | "signed-out";
 };
+
+async function loadTendency(accessToken: string): Promise<RecordData["tendency"]> {
+  try {
+    const response = await fetchBackendApi("me/workout-tendency", accessToken);
+    if (response.status === 401) return "signed-out";
+    if (!response.ok) return "error";
+    return parseWorkoutTendency(await response.json()) ?? "error";
+  } catch { return "error"; }
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -79,10 +90,11 @@ async function loadRecords(): Promise<
   const session = await getUserSession();
   if (session.state !== "authenticated") return { state: "signed-out" };
   try {
-    const [recordsResponse, statsResponse, gemsResponse] = await Promise.all([
+    const [recordsResponse, statsResponse, gemsResponse, tendency] = await Promise.all([
       fetchBackendApi("me/workout-records?limit=20", session.accessToken),
       fetchBackendApi("me/workout-stats", session.accessToken),
       fetchBackendApi("me/gems?limit=8", session.accessToken),
+      loadTendency(session.accessToken),
     ]);
     if ([recordsResponse, statsResponse, gemsResponse].some((response) => response.status === 401)) return { state: "signed-out" };
     if (![recordsResponse, statsResponse, gemsResponse].every((response) => response.ok)) return { state: "error" };
@@ -93,7 +105,7 @@ async function loadRecords(): Promise<
     const stats = parseStats(statsBody);
     const gems = parseGems(gemsBody);
     if (!records || !stats || !gems) return { state: "error" };
-    return { state: "loaded", data: { records, stats, gems } };
+    return { state: "loaded", data: { records, stats, gems, tendency } };
   } catch {
     return { state: "error" };
   }
@@ -118,26 +130,37 @@ export async function ConnectedRecordsView() {
     return <>
       <PageIntro eyebrow="MY CABINET" title="기록을 불러오지 못했어요" />
       <Notice danger>서버 연결을 확인하고 다시 시도해 주세요.</Notice>
-      <ActionBar><Link className="hm-action-button" href="/records">다시 불러오기</Link></ActionBar>
+      <ActionBar><a className="hm-action-button" href="/records">다시 불러오기</a></ActionBar>
     </>;
   }
 
-  const { records, gems, stats } = result.data;
+  const { records, gems, stats, tendency } = result.data;
   const knownGems = new Map<string, GemState>(gemStates.map((gem) => [gem.state, gem.state]));
   return <>
     <PageIntro eyebrow="MY CABINET" title="쌓여가는 나의 보석들" description="저장된 운동 기록과 보석을 확인해요." />
     <p><Link className="hm-text-link" href="/workout?connected=1">진행 중인 운동 이어가기</Link></p>
     <div className="hm-stat-grid hm-records-stats">
       <Card><strong>{stats.current_streak_days ?? "—"}일</strong><p>연속 운동일</p></Card>
-      <Card><strong>{stats.completed_sessions ?? records.filter((item) => item.result === "completed").length}회</strong><p>완료한 운동</p></Card>
+      <Card><strong>{stats.completed_sessions ?? "—"}회</strong><p>완료한 운동</p></Card>
       <Card><strong>{gems.length}개</strong><p>최근 보석</p></Card>
     </div>
+    <Card className="hm-records-history hm-tendency">
+      <h2>운동 성향 요약</h2>
+      {tendency === "signed-out" ? <p>로그인 상태를 확인해 주세요. <Link className="hm-text-link" href="/login?next=%2Frecords">다시 로그인</Link></p>
+        : tendency === "error" ? <><p role="alert">요약을 불러오지 못했어요. 운동 기록과 보석은 아래에서 확인할 수 있어요.</p><a className="hm-text-link" href="/records">요약 다시 불러오기</a></>
+        : <>
+          {tendency.summary ? <><p className="hm-tendency-text">{tendency.summary}</p><p className="hm-helper">설문 {tendency.source_feedback_count}건을 바탕으로 생성한 요약이에요.</p></>
+            : <p>아직 저장된 성향 요약이 없어요.</p>}
+          <p role="status">{tendencyStatusMessage(tendency.latest_generation_status)}</p>
+          {tendency.latest_generation_status !== "not_requested" && <a className="hm-text-link" href="/records">요약 상태 다시 확인하기</a>}
+        </>}
+    </Card>
     <Card className="hm-records-history">
       <h2>운동 기록</h2>
       {records.length === 0 ? <p>아직 저장된 운동 기록이 없어요.</p> : records.map((record) => (
         <div className="hm-record-row" key={record.session_id}>
           <span>{record.ended_at ? new Date(record.ended_at).toLocaleDateString("ko-KR") : "날짜 미정"} · {recordResultLabel(record.result)}</span>
-          <span>{record.completed_stage_count ?? 0} / 5 단계</span>
+          <span>{record.completed_stage_count ?? "—"} / 5 단계</span>
           {record.result === "abandoned"
             ? <span>포기한 운동은 설문 없이 마무리돼요.</span>
             : record.feedback_status === "submitted"

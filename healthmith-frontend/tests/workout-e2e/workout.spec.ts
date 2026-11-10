@@ -22,6 +22,29 @@ async function begin(page: Page) {
   return new URL(page.url()).searchParams.get("sessionId")!;
 }
 
+test("생성 상태 조회가 끊겨도 같은 요청을 재조회해 미확정 초안을 복구한다", async ({ page }) => {
+  let interrupted = false;
+  await page.route("**/routine/generation/**", async (route) => {
+    if (!interrupted && route.request().method() === "POST" && route.request().headers()["next-action"]) {
+      interrupted = true;
+      await route.abort("failed");
+    } else await route.continue();
+  });
+  await page.goto(`/routine/generation/${requestId}`);
+  await expect(page.getByRole("heading", { name: "초안을 불러오지 못했어요" })).toBeVisible();
+  await page.getByRole("button", { name: "같은 요청 다시 확인하기" }).click();
+  await expect(page.getByRole("heading", { name: "오늘의 운동 설계도" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "이 루틴 확정하고 준비하기" })).toBeDisabled();
+  await expect(page).toHaveURL(new RegExp(`/routine/generation/${requestId}$`));
+});
+
+test("실제 API의 빈 성향 요약을 예시나 생성 성공으로 바꾸지 않는다", async ({ page }) => {
+  await page.goto("/records");
+  await expect(page.getByText("아직 저장된 성향 요약이 없어요.", { exact: true })).toBeVisible();
+  await expect(page.getByText("아직 요약 생성 요청이 없어요.", { exact: true })).toBeVisible();
+  await expect(page.getByText("요약을 불러오지 못했어요.", { exact: false })).toHaveCount(0);
+});
+
 async function syntheticPose(page: Page) {
   // 카메라/관절 입력만 대체한다. 서버 액션·JWT·Spring·R2DBC·DB는 실제 경로다.
   await page.addInitScript(() => {

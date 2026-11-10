@@ -184,7 +184,9 @@
 .hm-records-summary h2 { color: var(--hm-ink); font-size: 15px; margin: 6px 0 4px; }
 .hm-records-summary p { margin: 0; }
 .hm-records-history { margin-top: 16px; }
-.hm-record-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 0; color: var(--hm-muted); font-size: 11px; }
+.hm-record-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 0; color: var(--hm-muted); font-size: 11px; }
+.hm-tendency { overflow-wrap: anywhere; }
+.hm-tendency-text { white-space: pre-wrap; }
 .hm-record-row + .hm-record-row { border-top: 1px solid #f0f1f7; }
 .hm-record-row span:last-child { color: var(--hm-violet); }
 .hm-empty { text-align: center; padding: 38px 20px; }
