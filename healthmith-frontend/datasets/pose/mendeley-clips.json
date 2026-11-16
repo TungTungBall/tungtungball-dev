@@ -1,0 +1,456 @@
+{
+  "source": {
+    "url": "https://data.mendeley.com/datasets/kgbb3yn47p/3",
+    "license": "https://creativecommons.org/licenses/by/4.0/",
+    "archive": "Dataset Exercise-wise.zip",
+    "archive_sha256": "6d927246dbd2ed8a314b41201c94ebdcbd1b4abec0851d1ca39f82afda8a5eed"
+  },
+  "clips": [
+    {
+      "id": "subject_001_push_up_bad_side",
+      "file": "Dataset Exercise-wise/push_up/bad/side/subject_001_push_up_bad_side.mp4",
+      "sha256": "d41d899c9c89c5cc99bb8e3c3602f284aa774371632c79900bb918b1b80e1976",
+      "exercise": "push_up",
+      "subject": "001",
+      "view": "side",
+      "source_form": "bad",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_001_push_up_good_diagonal",
+      "file": "Dataset Exercise-wise/push_up/good/diagonal/subject_001_push_up_good_diagonal.mp4",
+      "sha256": "df1a77dc0eed96ad3c5855a516a85683c8a76a99e55043bb09a484050158b29b",
+      "exercise": "push_up",
+      "subject": "001",
+      "view": "diagonal",
+      "source_form": "good",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_001_push_up_good_side",
+      "file": "Dataset Exercise-wise/push_up/good/side/subject_001_push_up_good_side.mp4",
+      "sha256": "f437f915e8d1cb8dd651bbf3f63a80527bac74200429075bd1d3d6ec7c6a6a0d",
+      "exercise": "push_up",
+      "subject": "001",
+      "view": "side",
+      "source_form": "good",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_001_squat_bad_side",
+      "file": "Dataset Exercise-wise/squat/bad/side/subject_001_squat_bad_side.mp4",
+      "sha256": "68e23ba81449591d793cb71c93bff36083d2c3c552ac984309b8ddb834f12c04",
+      "exercise": "squat",
+      "subject": "001",
+      "view": "side",
+      "source_form": "bad",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_001_squat_good_diagonal",
+      "file": "Dataset Exercise-wise/squat/good/diagonal/subject_001_squat_good_diagonal.mp4",
+      "sha256": "9f6f171692194a747aa8cec1120fdc65b49e6622309ebc4ec4915eb6c3c1560c",
+      "exercise": "squat",
+      "subject": "001",
+      "view": "diagonal",
+      "source_form": "good",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_001_squat_good_side",
+      "file": "Dataset Exercise-wise/squat/good/side/subject_001_squat_good_side.mp4",
+      "sha256": "71408510449717414d614e1e1a0a7ca498b7d8463f81d3375ea9da87fc18e7af",
+      "exercise": "squat",
+      "subject": "001",
+      "view": "side",
+      "source_form": "good",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_004_push_up_bad_side",
+      "file": "Dataset Exercise-wise/push_up/bad/side/subject_004_push_up_bad_side.mp4",
+      "sha256": "f5f774636562a11c212edbfd89597a966005df512608cf3740fea788219838fa",
+      "exercise": "push_up",
+      "subject": "004",
+      "view": "side",
+      "source_form": "bad",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_004_push_up_good_diagonal",
+      "file": "Dataset Exercise-wise/push_up/good/diagonal/subject_004_push_up_good_diagonal.mp4",
+      "sha256": "433fe95534514c8ef923d23aaac57e4a26cce14d6e660a298deaf9e5d6e1dba8",
+      "exercise": "push_up",
+      "subject": "004",
+      "view": "diagonal",
+      "source_form": "good",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_004_push_up_good_side",
+      "file": "Dataset Exercise-wise/push_up/good/side/subject_004_push_up_good_side.mp4",
+      "sha256": "818bdfa65d3c233a5df5a7cd4ba16cc6adae25a8fd081893b0eda9df1bebb1cb",
+      "exercise": "push_up",
+      "subject": "004",
+      "view": "side",
+      "source_form": "good",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_004_squat_bad_side",
+      "file": "Dataset Exercise-wise/squat/bad/side/subject_004_squat_bad_side.mp4",
+      "sha256": "71a843153d4389aaf8cf138fa3c8e1c1883a17eb0ced6488ac624f0fd4a17179",
+      "exercise": "squat",
+      "subject": "004",
+      "view": "side",
+      "source_form": "bad",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_004_squat_good_diagonal",
+      "file": "Dataset Exercise-wise/squat/good/diagonal/subject_004_squat_good_diagonal.mp4",
+      "sha256": "6636f5e33cc870255d4f708e0127760749217a60a2c92bcf0e8e674e218675b7",
+      "exercise": "squat",
+      "subject": "004",
+      "view": "diagonal",
+      "source_form": "good",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_004_squat_good_side",
+      "file": "Dataset Exercise-wise/squat/good/side/subject_004_squat_good_side.mp4",
+      "sha256": "72a97ef0ca23e6811e10a0180aaf9c35f4c979c705ca0e3d6c1b16a85d27b829",
+      "exercise": "squat",
+      "subject": "004",
+      "view": "side",
+      "source_form": "good",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_007_push_up_bad_side",
+      "file": "Dataset Exercise-wise/push_up/bad/side/subject_007_push_up_bad_side.mp4",
+      "sha256": "c98febc5355ef0b4ae8e3225acd7c660afa38b722cde40abde85ec8241275e5d",
+      "exercise": "push_up",
+      "subject": "007",
+      "view": "side",
+      "source_form": "bad",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_007_push_up_good_diagonal",
+      "file": "Dataset Exercise-wise/push_up/good/diagonal/subject_007_push_up_good_diagonal.mp4",
+      "sha256": "e4a951ec8630ad8f2ad075641abef7bfdd8657c53f4f414217ebd53e7e229e72",
+      "exercise": "push_up",
+      "subject": "007",
+      "view": "diagonal",
+      "source_form": "good",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_007_push_up_good_side",
+      "file": "Dataset Exercise-wise/push_up/good/side/subject_007_push_up_good_side.mp4",
+      "sha256": "4831d10ff136d7a90dc18399ccb2512acddfd999015409c9ed7f19cc2e930a2c",
+      "exercise": "push_up",
+      "subject": "007",
+      "view": "side",
+      "source_form": "good",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_007_squat_bad_side",
+      "file": "Dataset Exercise-wise/squat/bad/side/subject_007_squat_bad_side.mp4",
+      "sha256": "7e3bd11c401a6c5859da70bd0b25c5dba5d5e29f8b98b18603e2fbd914ae792b",
+      "exercise": "squat",
+      "subject": "007",
+      "view": "side",
+      "source_form": "bad",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_007_squat_good_diagonal",
+      "file": "Dataset Exercise-wise/squat/good/diagonal/subject_007_squat_good_diagonal.mp4",
+      "sha256": "848da7b366344372fc2b8e295a803eacbfed4893a7376b9e315a235b4597d4e8",
+      "exercise": "squat",
+      "subject": "007",
+      "view": "diagonal",
+      "source_form": "good",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_007_squat_good_side",
+      "file": "Dataset Exercise-wise/squat/good/side/subject_007_squat_good_side.mp4",
+      "sha256": "540b3e24a13b7c7bbf1f3d78d80db7ab353b87e7be8dc148395598b15d302441",
+      "exercise": "squat",
+      "subject": "007",
+      "view": "side",
+      "source_form": "good",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_010_push_up_bad_side",
+      "file": "Dataset Exercise-wise/push_up/bad/side/subject_010_push_up_bad_side.mp4",
+      "sha256": "f78a2c406d3ca4c079282717b64f7ee37c3ff99e5dda3d25c9fa7f70fe3a26a0",
+      "exercise": "push_up",
+      "subject": "010",
+      "view": "side",
+      "source_form": "bad",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_010_push_up_good_diagonal",
+      "file": "Dataset Exercise-wise/push_up/good/diagonal/subject_010_push_up_good_diagonal.mp4",
+      "sha256": "f8cd752b8dbdb641437a16561bf8a4942a0f3c14c335d08e99eaa834223331ed",
+      "exercise": "push_up",
+      "subject": "010",
+      "view": "diagonal",
+      "source_form": "good",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_010_squat_bad_side",
+      "file": "Dataset Exercise-wise/squat/bad/side/subject_010_squat_bad_side.mp4",
+      "sha256": "96553c9dec7359d4c0fef70054e979bb3576e831915a5f8cda0e7ed44758dced",
+      "exercise": "squat",
+      "subject": "010",
+      "view": "side",
+      "source_form": "bad",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_010_squat_good_diagonal",
+      "file": "Dataset Exercise-wise/squat/good/diagonal/subject_010_squat_good_diagonal.mp4",
+      "sha256": "b9da1f1e5766de1e7e6f0afa45a05d4ba1d4bbfdc7a420c293a8ff58b66b8bb1",
+      "exercise": "squat",
+      "subject": "010",
+      "view": "diagonal",
+      "source_form": "good",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_010_squat_good_side",
+      "file": "Dataset Exercise-wise/squat/good/side/subject_010_squat_good_side.mp4",
+      "sha256": "5b3860e6780d7de2fdc45f349170fb2cda2f5259030d031b3092e92ffe9230b2",
+      "exercise": "squat",
+      "subject": "010",
+      "view": "side",
+      "source_form": "good",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_013_push_up_bad_side",
+      "file": "Dataset Exercise-wise/push_up/bad/side/subject_013_push_up_bad_side.mp4",
+      "sha256": "cf263986f688bad9535a8675cee4f037b6369b02935d8fd0f81c7b4e0ee6059a",
+      "exercise": "push_up",
+      "subject": "013",
+      "view": "side",
+      "source_form": "bad",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_013_push_up_good_diagonal",
+      "file": "Dataset Exercise-wise/push_up/good/diagonal/subject_013_push_up_good_diagonal.mp4",
+      "sha256": "eb8e6a78d2cd714195e3b3023653afdef31ee78cef8a8c8778279b2cd8138de0",
+      "exercise": "push_up",
+      "subject": "013",
+      "view": "diagonal",
+      "source_form": "good",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_013_squat_bad_side",
+      "file": "Dataset Exercise-wise/squat/bad/side/subject_013_squat_bad_side.mp4",
+      "sha256": "27cd1d84ad784d38364cc108b6491777a8a378d224b02dda66948b032617de44",
+      "exercise": "squat",
+      "subject": "013",
+      "view": "side",
+      "source_form": "bad",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_013_squat_good_diagonal",
+      "file": "Dataset Exercise-wise/squat/good/diagonal/subject_013_squat_good_diagonal.mp4",
+      "sha256": "0e3f52b1c6e280057b2a0131289998f4ec4b03cd1efe1fcbfe87c76bfcc23f36",
+      "exercise": "squat",
+      "subject": "013",
+      "view": "diagonal",
+      "source_form": "good",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_013_squat_good_side",
+      "file": "Dataset Exercise-wise/squat/good/side/subject_013_squat_good_side.mp4",
+      "sha256": "0f80e6c741734c22a2f9590cfe0a9c4e6b41b0097e16ed5f9d299098a7a8b82a",
+      "exercise": "squat",
+      "subject": "013",
+      "view": "side",
+      "source_form": "good",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_016_push_up_bad_side",
+      "file": "Dataset Exercise-wise/push_up/bad/side/subject_016_push_up_bad_side.mp4",
+      "sha256": "3c2d66e9f8ae3960916e7532dcd72074b2caa0e34f5bcce094b68abfbc6f1e13",
+      "exercise": "push_up",
+      "subject": "016",
+      "view": "side",
+      "source_form": "bad",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_016_push_up_good_diagonal",
+      "file": "Dataset Exercise-wise/push_up/good/diagonal/subject_016_push_up_good_diagonal.mp4",
+      "sha256": "2063349911813b6be030c4021cbeddde11023c5545be8f53ec92d3e0ada0a24a",
+      "exercise": "push_up",
+      "subject": "016",
+      "view": "diagonal",
+      "source_form": "good",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_016_push_up_good_side",
+      "file": "Dataset Exercise-wise/push_up/good/side/subject_016_push_up_good_side.mp4",
+      "sha256": "67e3fef9fbf3b51696882f73df22e01aea6adb422f26d642dedcddc9f9c6bae5",
+      "exercise": "push_up",
+      "subject": "016",
+      "view": "side",
+      "source_form": "good",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_016_squat_bad_side",
+      "file": "Dataset Exercise-wise/squat/bad/side/subject_016_squat_bad_side.mp4",
+      "sha256": "b989acd8585b42de0c3bc72c5a70871be6ace2476dd6effa0265d056f01b69dd",
+      "exercise": "squat",
+      "subject": "016",
+      "view": "side",
+      "source_form": "bad",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_016_squat_good_diagonal",
+      "file": "Dataset Exercise-wise/squat/good/diagonal/subject_016_squat_good_diagonal.mp4",
+      "sha256": "688bbed50f00c7356dd02620b24a6700013ef1d226946ba66b42a5e5f048f7a2",
+      "exercise": "squat",
+      "subject": "016",
+      "view": "diagonal",
+      "source_form": "good",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_016_squat_good_side",
+      "file": "Dataset Exercise-wise/squat/good/side/subject_016_squat_good_side.mp4",
+      "sha256": "f379c74999a7bd7c00a80ac50ed376163d0cbc12546ae7b658a012475376e220",
+      "exercise": "squat",
+      "subject": "016",
+      "view": "side",
+      "source_form": "good",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_019_push_up_good_diagonal",
+      "file": "Dataset Exercise-wise/push_up/good/diagonal/subject_019_push_up_good_diagonal.mp4",
+      "sha256": "51808020a73122cb7856805fa774058a22d7a5b5f8b2099dfc15051623e9a368",
+      "exercise": "push_up",
+      "subject": "019",
+      "view": "diagonal",
+      "source_form": "good",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_019_squat_bad_side",
+      "file": "Dataset Exercise-wise/squat/bad/side/subject_019_squat_bad_side.mp4",
+      "sha256": "b896db8c20838b13d9e512809b067e889d38214780244699e6fa85de87b36fe4",
+      "exercise": "squat",
+      "subject": "019",
+      "view": "side",
+      "source_form": "bad",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_019_squat_good_diagonal",
+      "file": "Dataset Exercise-wise/squat/good/diagonal/subject_019_squat_good_diagonal.mp4",
+      "sha256": "5a643922d1ca839cc3032fc76dc348a33febfb7a3ed0da3c0114bade96bd39ae",
+      "exercise": "squat",
+      "subject": "019",
+      "view": "diagonal",
+      "source_form": "good",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_019_squat_good_side",
+      "file": "Dataset Exercise-wise/squat/good/side/subject_019_squat_good_side.mp4",
+      "sha256": "38b64a25abb08d1f230b34182e552cc5b1c122a2b6a5e399a1224d66de08ff4a",
+      "exercise": "squat",
+      "subject": "019",
+      "view": "side",
+      "source_form": "good",
+      "split": "calibration"
+    },
+    {
+      "id": "subject_022_push_up_bad_side",
+      "file": "Dataset Exercise-wise/push_up/bad/side/subject_022_push_up_bad_side.mp4",
+      "sha256": "44d1599d0e19b731b74cf76dcbbf7f7bd2f7d8df37b696454f6c69f3c88eea27",
+      "exercise": "push_up",
+      "subject": "022",
+      "view": "side",
+      "source_form": "bad",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_022_push_up_good_diagonal",
+      "file": "Dataset Exercise-wise/push_up/good/diagonal/subject_022_push_up_good_diagonal.mp4",
+      "sha256": "bfc382c48664e126368de6e4ee1c84be3adab1aad3c967c3ac99b10428c30567",
+      "exercise": "push_up",
+      "subject": "022",
+      "view": "diagonal",
+      "source_form": "good",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_022_push_up_good_side",
+      "file": "Dataset Exercise-wise/push_up/good/side/subject_022_push_up_good_side.mp4",
+      "sha256": "00d0127c6241ef311a27b4a01cb6302576b9a7dfc20a78547fec213073908070",
+      "exercise": "push_up",
+      "subject": "022",
+      "view": "side",
+      "source_form": "good",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_022_squat_bad_side",
+      "file": "Dataset Exercise-wise/squat/bad/side/subject_022_squat_bad_side.mp4",
+      "sha256": "c7b18810c4a9aecbdc30d51222ca60aa58e56cec8c4dcb92892e993c2d652970",
+      "exercise": "squat",
+      "subject": "022",
+      "view": "side",
+      "source_form": "bad",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_022_squat_good_diagonal",
+      "file": "Dataset Exercise-wise/squat/good/diagonal/subject_022_squat_good_diagonal.mp4",
+      "sha256": "6700ab222630769cca10c812bc3380fd01cc10b95d8ed9482be7f7129eaa6904",
+      "exercise": "squat",
+      "subject": "022",
+      "view": "diagonal",
+      "source_form": "good",
+      "split": "holdout"
+    },
+    {
+      "id": "subject_022_squat_good_side",
+      "file": "Dataset Exercise-wise/squat/good/side/subject_022_squat_good_side.mp4",
+      "sha256": "79ca2bb8286df0f314cdce3918c995c1def43fd33d412405099b121c7fb12851",
+      "exercise": "squat",
+      "subject": "022",
+      "view": "side",
+      "source_form": "good",
+      "split": "holdout"
+    }
+  ],
+  "excluded_identical_files": [
+    "Dataset Exercise-wise/push_up/good/side/subject_010_push_up_good_side.mp4",
+    "Dataset Exercise-wise/push_up/good/side/subject_013_push_up_good_side.mp4",
+    "Dataset Exercise-wise/push_up/bad/side/subject_019_push_up_bad_side.mp4",
+    "Dataset Exercise-wise/push_up/good/side/subject_019_push_up_good_side.mp4"
+  ]
+}

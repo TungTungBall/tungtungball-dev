@@ -1,0 +1,214 @@
+{
+  "clips": [
+    {
+      "id": "burpee-burpee",
+      "file": "burpee.webm",
+      "sha256": "569a16575f2f2460f27f70dc9188141d52854ea4a2afa27d3a286ec368248a78",
+      "exercise": "burpee",
+      "split": "reference",
+      "source": {
+        "page": "https://commons.wikimedia.org/wiki/File:Burpee.webm",
+        "download": "https://upload.wikimedia.org/wikipedia/commons/3/39/Burpee.webm",
+        "author": "Taco fleur (crop by 3point1415)",
+        "license": "https://creativecommons.org/licenses/by-sa/4.0/"
+      },
+      "start_ms": 0,
+      "end_ms": 12500
+    },
+    {
+      "id": "jumping_jack-jumping-jack-mixed",
+      "file": "jumping-jack-mixed.webm",
+      "sha256": "1c8370a29c52b5b1538f03f8c63be6cdc9333dea3cbd77cc8f2af0dbe496d5b4",
+      "exercise": "jumping_jack",
+      "split": "reference",
+      "source": {
+        "page": "https://commons.wikimedia.org/wiki/File:Jumping_jacks_and_burpees.webm",
+        "download": "https://upload.wikimedia.org/wikipedia/commons/5/57/Jumping_jacks_and_burpees.webm",
+        "author": "Taco fleur",
+        "license": "https://creativecommons.org/licenses/by-sa/4.0/"
+      },
+      "start_ms": 0,
+      "end_ms": 3050
+    },
+    {
+      "id": "crunch-sit-up-cdc",
+      "file": "sit-up-cdc.webm",
+      "sha256": "ae5540af864e4ca7d0f02e37902729a85da5e44499c1b7a43dfffecd29e8fc01",
+      "exercise": "crunch",
+      "split": "reference",
+      "source": {
+        "page": "https://commons.wikimedia.org/wiki/File:Muscle_Strengthening_at_Home_-_Sit-ups.webm",
+        "download": "https://upload.wikimedia.org/wikipedia/commons/f/f4/Muscle_Strengthening_at_Home_-_Sit-ups.webm",
+        "author": "U.S. Centers for Disease Control and Prevention",
+        "license": "Public domain (United States)"
+      },
+      "start_ms": 15500,
+      "end_ms": 28700
+    },
+    {
+      "id": "sit_up-sit-up-tokyo",
+      "file": "sit-up-tokyo.webm",
+      "sha256": "fbdda4c8afea5a61b6858e42d70b7112e685f79bbaa6a9bac8cab5a0a558ca20",
+      "exercise": "sit_up",
+      "split": "reference",
+      "source": {
+        "page": "https://commons.wikimedia.org/wiki/File:Situps-tokyoarea-2018.webm",
+        "download": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Situps-tokyoarea-2018.webm",
+        "author": "Nesnad",
+        "license": "https://creativecommons.org/licenses/by/4.0/"
+      },
+      "start_ms": 0,
+      "end_ms": 9750
+    },
+    {
+      "id": "tuck_jump-tuck-jump",
+      "file": "tuck-jump.webm",
+      "sha256": "b49e0a92a22bcfc8e142560285a1da4baddbade3573050a12235d5b29bfe7b7d",
+      "exercise": "tuck_jump",
+      "split": "reference",
+      "source": {
+        "page": "https://commons.wikimedia.org/wiki/File:Conditional_Drill-_Tuck_Jump.webm",
+        "download": "https://upload.wikimedia.org/wikipedia/commons/0/06/Conditional_Drill-_Tuck_Jump.webm",
+        "author": "U.S. Army Combat Fitness Test",
+        "license": "Public domain (United States)"
+      },
+      "start_ms": 9500,
+      "end_ms": 13100
+    },
+    {
+      "id": "power_jump-power-jump",
+      "file": "power-jump.webm",
+      "sha256": "013893481ec1d78068fb05c9b44c858924f282a97d82e8be937046a2dc4f97f1",
+      "exercise": "power_jump",
+      "split": "reference",
+      "source": {
+        "page": "https://commons.wikimedia.org/wiki/File:Conditioning_Drill_1-_Power_Jump.webm",
+        "download": "https://upload.wikimedia.org/wikipedia/commons/1/17/Conditioning_Drill_1-_Power_Jump.webm",
+        "author": "U.S. Army Combat Fitness Test",
+        "license": "Public domain (United States)"
+      },
+      "start_ms": 15000,
+      "end_ms": 25100
+    },
+    {
+      "id": "split_squat_jump-split-squat-jump",
+      "file": "split-squat-jump.webm",
+      "sha256": "7e886f245abd5a5f1450232b354464515fd13bfa5250bed731975a8262b54abd",
+      "exercise": "split_squat_jump",
+      "split": "reference",
+      "source": {
+        "page": "https://commons.wikimedia.org/wiki/File:Conditioning_Drill_3-_Alternate_Staggered_Squat_Jump.webm",
+        "download": "https://upload.wikimedia.org/wikipedia/commons/3/34/Conditioning_Drill_3-_Alternate_Staggered_Squat_Jump.webm",
+        "author": "U.S. Army Combat Fitness Test",
+        "license": "Public domain (United States)"
+      },
+      "start_ms": 25200,
+      "end_ms": 30200
+    },
+    {
+      "id": "mountain_climber-mountain-climber",
+      "file": "mountain-climber.mp4",
+      "sha256": "c792337cc2b8625d02db8e3f5013bdba74e9f7d33dea392937409322b1f70df3",
+      "exercise": "mountain_climber",
+      "split": "reference",
+      "source": {
+        "page": "https://www.dvidshub.net/video/558587/mountain-climbers",
+        "download": "https://d34w7g4gy10iej.cloudfront.net/video/1710/DOD_104966777/DOD_104966777-1024x576-1769k.mp4",
+        "author": "CPT Matthew Holfinger, U.S. Marine Corps",
+        "license": "Public domain (United States)"
+      },
+      "start_ms": 7800,
+      "end_ms": 21800
+    },
+    {
+      "id": "plank-plank-demo",
+      "file": "plank-demo.mp4",
+      "sha256": "9889c5951d60d8e1dbd79366d54581be1a038dfdd77a06df0e1bbd91013790a7",
+      "exercise": "plank",
+      "split": "reference",
+      "source": {
+        "page": "https://www.dvidshub.net/video/753559/7-foundational-movements-plank",
+        "download": "https://d34w7g4gy10iej.cloudfront.net/video/2005/DOD_107824320/DOD_107824320-1024x576-1769k.mp4",
+        "author": "Cpl. Quinn Hurt, U.S. Marine Corps",
+        "license": "Public domain (United States)"
+      },
+      "start_ms": 26900,
+      "end_ms": 28500
+    },
+    {
+      "id": "side_plank-plank-demo",
+      "file": "plank-demo.mp4",
+      "sha256": "9889c5951d60d8e1dbd79366d54581be1a038dfdd77a06df0e1bbd91013790a7",
+      "exercise": "side_plank",
+      "split": "reference",
+      "source": {
+        "page": "https://www.dvidshub.net/video/753559/7-foundational-movements-plank",
+        "download": "https://d34w7g4gy10iej.cloudfront.net/video/2005/DOD_107824320/DOD_107824320-1024x576-1769k.mp4",
+        "author": "Cpl. Quinn Hurt, U.S. Marine Corps",
+        "license": "Public domain (United States)"
+      },
+      "start_ms": 48900,
+      "end_ms": 51600
+    },
+    {
+      "id": "lunge-reverse-lunge",
+      "file": "reverse-lunge.mp4",
+      "sha256": "fb564598f5184e4539b893ca0ffd516c0b731148296603dca79a70fa86f7f830",
+      "exercise": "lunge",
+      "split": "reference",
+      "source": {
+        "page": "https://www.dvidshub.net/video/551833/stationary-reverse-lunge",
+        "download": "https://d34w7g4gy10iej.cloudfront.net/video/1709/DOD_104849830/DOD_104849830-1024x576-1769k.mp4",
+        "author": "CPT Matthew Holfinger, U.S. Marine Corps",
+        "license": "Public domain (United States)"
+      },
+      "start_ms": 11000,
+      "end_ms": 24600
+    },
+    {
+      "id": "lunge-reverse-lunge-b",
+      "file": "reverse-lunge-b.mp4",
+      "sha256": "6cfb49d823b1fd4e39487943c655a34cfc9e0a7f8ffb50ed3448be1b7f7c784e",
+      "exercise": "lunge",
+      "split": "reference",
+      "source": {
+        "page": "https://www.dvidshub.net/video/692857/reverse-lunge",
+        "download": "https://d34w7g4gy10iej.cloudfront.net/video/1906/DOD_106953166/DOD_106953166.mp4",
+        "author": "CPT Matthew Holfinger, U.S. Marine Corps",
+        "license": "Public domain (United States)"
+      },
+      "start_ms": 500,
+      "end_ms": 18200
+    },
+    {
+      "id": "squat-squat-demo",
+      "file": "squat-demo.mp4",
+      "sha256": "05b5870da6ebc66abcfd5715a2864e21299d176dc2c87524d3f5904c37450f66",
+      "exercise": "squat",
+      "split": "reference",
+      "source": {
+        "page": "https://www.dvidshub.net/video/517502/body-weight-squat",
+        "download": "https://d34w7g4gy10iej.cloudfront.net/video/1704/DOD_104245094/DOD_104245094-1024x576-1769k.mp4",
+        "author": "Capt. Joshua Pena / Cpl. Amber Jennings, U.S. Marine Corps",
+        "license": "Public domain (United States)"
+      },
+      "start_ms": 16900,
+      "end_ms": 31900
+    },
+    {
+      "id": "bear_crawl-bear-crawl",
+      "file": "bear-crawl.mp4",
+      "sha256": "ddb632db8599ac4a686223d74545ffcc640109e2a07478fd304797c9fb7bd8b1",
+      "exercise": "bear_crawl",
+      "split": "reference",
+      "source": {
+        "page": "https://www.dvidshub.net/video/677348/bear-crawl",
+        "download": "https://d34w7g4gy10iej.cloudfront.net/video/1905/DOD_106712398/DOD_106712398-640x480-922k.mp4",
+        "author": "CPT Matthew Holfinger, U.S. Marine Corps",
+        "license": "Public domain (United States)"
+      },
+      "start_ms": 0,
+      "end_ms": 13200
+    }
+  ]
+}
