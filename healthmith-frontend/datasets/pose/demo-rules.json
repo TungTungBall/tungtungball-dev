@@ -1,0 +1,13 @@
+{
+  "squat": {
+    "joints": [23, 25, 27],
+    "contracted_angle": 95,
+    "extended_angle": 155,
+    "min_visibility": 0.5,
+    "stable_frames": 2,
+    "min_cycle_ms": 450,
+    "max_gap_ms": 300,
+    "movement_degrees": 3
+  },
+  "push_up": { "method": "push-up-motion" }
+}
