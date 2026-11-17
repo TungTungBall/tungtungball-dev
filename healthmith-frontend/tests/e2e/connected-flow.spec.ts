@@ -2,11 +2,12 @@ import { expect, test } from "@playwright/test";
 
 // CI에는 실제 로그인·DB·Gemini 설정을 넣지 않는다. 이 파일은 진입 경로와
 // 비로그인·잘못된 주소의 화면을 검사하며 실제 외부 서비스 검증을 대신하지 않는다.
-test("홈 시작 버튼은 서버 저장용 사전조사로 연결한다", async ({ page }) => {
+test("홈 시작 버튼은 새 사전조사로 연결하고 기존 저장 양식도 제공한다", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: "첫 여정 시작하기" }).click();
   await expect(page).toHaveURL(/\/survey$/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("나에게 맞는 운동을 준비할게요");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("운동 목표");
+  await expect(page.getByRole("link", { name: "기존 양식으로 입력하기" })).toHaveAttribute("href", "/survey/legacy");
 });
 
 test("기록 기본 화면은 로그인 없이 예시를 실제 기록으로 보여 주지 않는다", async ({ page }) => {
@@ -50,7 +51,7 @@ test("잘못된 운동 세션 주소는 설문 대신 기록 복귀를 안내한
 });
 
 test("비로그인 설문 제출은 입력을 보존하고 저장 성공으로 이동하지 않는다", async ({ page }) => {
-  await page.goto("/feedback?sessionId=40000000-0000-4000-8000-000000000001");
+  await page.goto("/feedback?sessionId=40000000-0000-4000-8000-000000000001&legacy=1");
   await page.getByRole("button", { name: "근육통 없음", exact: true }).click();
   await page.getByRole("button", { name: "난이도 3", exact: true }).click();
   await page.getByRole("button", { name: "재미 4", exact: true }).click();

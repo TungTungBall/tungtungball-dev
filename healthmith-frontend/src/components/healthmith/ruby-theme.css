@@ -1,0 +1,91 @@
+/* 승인된 검정·빨강 테마. 원래 화면의 구조와 동작은 유지한다. */
+body { background:#000; color:#fff; font-family:var(--font-wanted),sans-serif; }
+.hm-app, .hm-app.hm-dark {
+  --hm-background:#000; --hm-surface:#151515; --hm-ink:#fff; --hm-muted:#cec8ce;
+  --hm-line:#363036; --hm-violet:#d82045; --hm-soft:#211116; --hm-deep:#101010;
+  --hm-gold:#ff869d; --hm-mint:#ff637f; --hm-pose-head:#f2e9eb;
+  --hm-danger:#ff9caf; --hm-danger-soft:#261017;
+  background:#000; color:#fff; font-family:var(--font-wanted),sans-serif;
+  font-size:16px; font-weight:600; color-scheme:dark;
+}
+.hm-shell,.hm-app .hm-main,.hm-header,.hm-bottom-nav { background:#000; box-shadow:none; }
+.hm-app :is(button,input,select,textarea) {font:inherit;}
+.hm-app :is(h1,h2,h3) {color:#fff;}
+.hm-intro h1,.hm-intake h1 {font-size:32px;font-weight:800;line-height:1.3;letter-spacing:-1px;}
+.hm-description,.hm-card p,.hm-notice,.hm-camera-instructions p {font-size:16px;font-weight:600;line-height:1.75;color:#e0dbe0;}
+.hm-helper,.hm-error,.hm-eyebrow,.hm-menu p,.hm-text-link {font-size:14px;font-weight:550;line-height:1.7;}
+.hm-error {color:#ff9caf;}
+.hm-action,.hm-app .hm-action-button,.hm-app .hm-choice,.hm-input,.hm-card,.hm-notice {border-radius:3px;}
+.hm-action,.hm-app .hm-action-button {font-size:16px;min-height:52px;}
+.hm-action:hover,.hm-app .hm-action-button:hover {background:#ba1738;}
+.hm-action-secondary:hover,.hm-app .hm-secondary-button:hover {background:#242024;}
+.hm-action:disabled {opacity:.5;cursor:not-allowed;}
+.hm-app .hm-choice {font-size:15px;font-weight:600;min-height:46px;}
+.hm-app .hm-choice:hover {background:#242024;border-color:#b85065;}
+.hm-app .hm-choice.is-selected {background:#2b1118;border-color:#f04969;color:#fff;}
+.hm-notice,.hm-login-status {border-color:#4a2b34;}
+.hm-action-bar {background:linear-gradient(0deg,#000 85%,transparent);}
+.hm-arch {background:#101010;}
+.hm-arch-label,.hm-sparkle,.hm-home-summary,.hm-home-summary b {color:#ff869d;}
+.hm-login-art {background:#000;border-color:#363036;}
+.hm-login-orbit {border-color:#473037;}
+.hm-login-art .hm-gem {filter:hue-rotate(100deg);}
+.hm-live-camera .hm-camera-stage,.hm-camera-stage {background:#111;}
+.hm-live-readout {background:#111;border-color:#363036;border-radius:3px;}
+.hm-live-stages .is-complete,.hm-live-stages .is-current {background:#ed3458;}
+.hm-camera-status {background:#252125;color:#fff;}
+.hm-camera-status[data-camera-status="tracking"] {background:#2b1118;color:#ff9caf;}
+.hm-camera-status[data-camera-status="unavailable"] {background:#32270f;color:#ffda8b;}
+.hm-intake,.hm-feedback-v2,.hm-preparation {padding-bottom:24px;}
+.hm-form-progress {display:flex;gap:5px;margin:24px 0;}
+.hm-form-progress span {height:3px;flex:1;background:#332c32;}
+.hm-form-progress .is-current {background:#e82a4c;}
+.hm-input-options {border:0;padding:0;margin:28px 0;min-width:0;}
+.hm-input-options legend {font-size:16px;font-weight:750;line-height:1.65;margin-bottom:13px;}
+.hm-option-list {display:flex;flex-wrap:wrap;gap:8px;}
+.hm-option-list button {border:1px solid #413840;background:#151315;color:#fff;min-height:48px;padding:12px 15px;border-radius:3px;font-weight:650;font-size:15px;line-height:1.5;cursor:pointer;text-align:left;}
+.hm-option-list button:hover {background:#25181e;border-color:#c76075;}
+.hm-option-list button[aria-pressed="true"] {border-color:#ef5472;background:#2d121b;}
+.hm-app :is(button,a,input,textarea):focus-visible {outline:2px solid #ff8ca3;outline-offset:4px;}
+.hm-limitation-detail {border-top:1px solid #363036;padding-top:20px;margin-top:22px;}
+.hm-limitation-detail h2 {font-size:21px;font-weight:750;}
+.hm-limitation-detail .hm-input-options {margin:18px 0;}
+.hm-review-list {margin:26px 0;}
+.hm-review-list>div {padding:16px 0;border-bottom:1px solid #363036;}
+.hm-review-list dt {font-size:14px;color:#cfc6cc;}
+.hm-review-list dd {font-size:16px;line-height:1.7;margin:7px 0 0;white-space:pre-line;overflow-wrap:anywhere;}
+.hm-availability {border-left:3px solid #e82a4c;padding:12px 14px;background:#191015;font-size:15px;line-height:1.75;margin:25px 0;color:#e6dfe3;}
+.hm-availability a {text-decoration:underline;text-underline-offset:4px;}
+.hm-form-actions {display:flex;gap:10px;margin-top:28px;}
+.hm-form-actions>* {flex:1;}
+.hm-feedback-v2 textarea {resize:vertical;display:block;width:100%;min-height:125px;background:#151315;color:#fff;border:1px solid #413840;border-radius:3px;padding:14px;font-size:16px;line-height:1.75;margin:12px 0;}
+.hm-feedback-v2 label {font-weight:750;font-size:16px;}
+.hm-score-labels {display:flex;justify-content:space-between;font-size:14px;color:#cec8ce;margin-top:-14px;}
+.hm-legacy-survey>form {margin-top:24px;}
+.hm-legacy-survey :is(fieldset,section,textarea,input),.hm-legacy-survey form>div {color:#fff;background:#000;border-color:#413840;}
+.hm-legacy-survey :is(legend,label,h2) {color:#fff;}
+.hm-legacy-survey :is(p,dt) {color:#d3ccd2;}
+.hm-legacy-survey label:has(input:checked) {background:#2d121b;border-color:#ed3458;}
+.hm-legacy-survey :is(button[type="submit"],button.bg-\[\#7355F5\]) {background:#d82045;color:white;border-radius:3px;}
+.hm-preparation .hm-stage-picker {margin:28px 0;}
+.hm-preparation .hm-stage-picker button {flex:1;text-align:center;padding:10px;}
+.hm-exercise-heading {display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:22px 0;}
+.hm-exercise-heading h2 {font-size:26px;font-weight:800;}
+.hm-exercise-heading strong {font-size:28px;white-space:nowrap;color:#ff637f;}
+.hm-exercise-facts {display:flex;gap:20px;border-block:1px solid #363036;padding:14px 0;margin:16px 0;}
+.hm-exercise-facts>div {flex:1;}
+.hm-exercise-facts dt {font-size:14px;color:#cec8ce;}
+.hm-exercise-facts dd {margin:5px 0 0;font-size:16px;}
+.hm-exercise-details {border-bottom:1px solid #363036;padding:16px 0;}
+.hm-exercise-details summary {font-size:17px;font-weight:750;cursor:pointer;}
+.hm-exercise-details p {margin-top:12px;color:#e0dbe0;font-size:16px;line-height:1.75;}
+.hm-exercise-details a {display:inline-block;color:#ff8da3;text-decoration:underline;padding:12px 0;font-size:14px;}
+.hm-stop-notice {border-left:3px solid #ed3458;padding:8px 14px;margin:22px 0;}
+.hm-stop-notice strong {color:#ff9caf;font-size:16px;}
+.hm-stop-notice p {font-size:16px;line-height:1.75;margin-top:8px;}
+.hm-front-diagram {width:100%;height:170px;background:#111;margin:24px 0;}
+.hm-preparation video {width:100%;aspect-ratio:4/3;object-fit:contain;background:#111;}
+.hm-preparation .hm-camera-instructions {border:0;padding:0;margin:20px 0;}
+.hm-preparation .hm-camera-instructions p {margin:14px 0;}
+.hm-preparation .hm-action {margin-top:16px;}
+@media(max-width:359px) {.hm-option-list button {padding:10px 12px;} .hm-intro h1,.hm-intake h1 {font-size:29px;} .hm-form-actions {flex-wrap:wrap;} }

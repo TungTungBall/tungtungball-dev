@@ -98,20 +98,36 @@ export function ConnectedWorkout({ sessionId }: { sessionId?: string }) {
     <ActionBar><ActionLink href="/records">운동 기록 보기</ActionLink><ActionLink href="/survey">새 루틴 준비하기</ActionLink></ActionBar>
   </>;
   const stage = curriculum.stages[session.current_stage_index - 1];
+  const totalStages = curriculum.stages.length;
+  const remaining = Math.max(0, stage.target_repetitions - session.current_repetitions);
   const active = session.status === "in_progress";
   const currentRule = ruleExerciseId === exerciseId ? rule : null;
+  const progress = <section className="hm-live-count" aria-label="운동 진행 상황" aria-live="polite" aria-atomic="true">
+    <span>남은 횟수</span>
+    <strong>{remaining}회</strong>
+    <span>완료 <span>{session.current_repetitions} / {stage.target_repetitions}</span></span>
+  </section>;
   return <>
-    <PageIntro eyebrow={`STAGE ${session.current_stage_index} / 5`} title={active ? stage.stage_name : session.status === "paused" ? "잠시 쉬고 있어요" : "운동을 마무리했어요"} />
-    <h2>{stage.exercise_name}</h2>
-    <p>{stage.pace_instruction}</p><p>{stage.internal_focus_instruction}</p>
-    <div className="hm-counter"><strong aria-live="polite">{session.current_repetitions} / {stage.target_repetitions}</strong><p>{session.completed_stage_count} / 5 단계 완료</p></div>
-    {active && currentRule && <PoseCamera key={`${exerciseId}:${cameraEpoch}`} rule={currentRule} enabled={!pending && !blocked && !pauseRequested}
-      onRepetition={() => change("repetition")} onPause={setPauseRequested} />}
+    <PageIntro
+      eyebrow={`진행 단계 ${session.current_stage_index} / ${totalStages} · ${stage.stage_name}`}
+      title={active ? stage.exercise_name : session.status === "paused" ? "잠시 쉬고 있어요" : "운동을 마무리했어요"}
+      description={!active ? stage.exercise_name : undefined}
+    />
+    <div className="hm-live-stages" aria-hidden="true">
+      {curriculum.stages.map(({ stage_index }) => (
+        <span key={stage_index} className={stage_index < session.current_stage_index ? "is-complete" : stage_index === session.current_stage_index ? "is-current" : undefined} />
+      ))}
+    </div>
+    {active && currentRule ? <PoseCamera key={`${exerciseId}:${cameraEpoch}`} rule={currentRule} enabled={!pending && !blocked && !pauseRequested}
+      onRepetition={() => change("repetition")} onPause={setPauseRequested}>
+      {progress}
+    </PoseCamera> : <div className="hm-live-readout">{progress}</div>}
+    <p className="hm-helper">{stage.pace_instruction} · {stage.internal_focus_instruction}</p>
     {active && !currentRule && <Notice>이 운동의 카메라 측정 기준이 준비되지 않았어요. 횟수를 측정할 수 없어 일시정지 후 기록으로 돌아갈 수 있어요.</Notice>}
     {session.status === "paused" && <Notice>단계와 횟수를 저장했어요. 카메라를 다시 준비한 뒤 이어갈 수 있어요.</Notice>}
     {message && <p role="alert" className="hm-error">{message}</p>}
     {uncertain && <Button disabled={pending} onClick={() => void execute(uncertain)}>같은 요청 결과 다시 확인</Button>}
-    <Button disabled={pending} onClick={() => void reload()}>최신 상태 불러오기</Button>
+    <Button variant="ghost" className="hm-live-refresh" disabled={pending} onClick={() => void reload()}>최신 상태 불러오기</Button>
     <ActionBar>
       {active && <Button className="hm-action-button" disabled={pending || blocked} onClick={() => change("pause")}>잠시 쉬어가기</Button>}
       {session.status === "paused" && <>
@@ -119,7 +135,7 @@ export function ConnectedWorkout({ sessionId }: { sessionId?: string }) {
         <Button className="hm-action-button hm-secondary-button" disabled={pending || blocked} onClick={() => change("abandon")}>이번 운동 포기하기</Button>
       </>}
     </ActionBar>
-    <p className="hm-helper">30초 동안 동작이 감지되지 않거나 화면을 벗어나면 운동을 일시정지해요.</p>
-    <ActionLink href="/records">운동 기록 보기</ActionLink>
+    <p className="hm-helper">측정 중 30초 동안 움직임이 없거나 다른 화면으로 이동하면 운동을 일시정지해요.</p>
+    <ActionLink href="/records" secondary>운동 기록 보기</ActionLink>
   </>;
 }

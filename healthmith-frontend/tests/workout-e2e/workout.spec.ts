@@ -16,7 +16,10 @@ async function begin(page: Page, target = 1) {
   await expect(confirm).toBeDisabled();
   await page.getByRole("checkbox").check(); await confirm.click();
   await expect(page).toHaveURL(new RegExp(`/camera\\?curriculumId=${curriculumId}`));
-  await page.getByRole("button", { name: "카메라 허용하고 운동 시작" }).click();
+  await expect(page.getByRole("heading", { name: "시작 전에 확인해요" })).toBeVisible();
+  await page.getByRole("button", { name: "촬영 준비로" }).click();
+  await page.getByRole("button", { name: "카메라 연결하기" }).click();
+  await page.getByRole("button", { name: "구도 확인 완료, 운동 시작" }).click();
   await expect(page).toHaveURL(/\/workout\?sessionId=/);
   await expect(page.getByText(`0 / ${target}`, { exact: true })).toBeVisible();
   return new URL(page.url()).searchParams.get("sessionId")!;
@@ -50,6 +53,12 @@ async function syntheticPose(page: Page) {
   await page.addInitScript(() => {
     const RealWorker = window.Worker;
     let angle = 160;
+    let trackingLost = false;
+    let workerSilent = false;
+    window.addEventListener("fixture-worker-silent", () => { workerSilent = true; });
+    window.addEventListener("fixture-tracking", (event) => {
+      trackingLost = (event as CustomEvent<boolean>).detail;
+    });
     window.addEventListener("fixture-angle", (event) => { angle = (event as CustomEvent<number>).detail; });
     window.Worker = class extends RealWorker {
       constructor(url: string | URL, options?: WorkerOptions) {
@@ -61,8 +70,9 @@ async function syntheticPose(page: Page) {
         if (data.type === "init") setTimeout(() => this.onmessage?.(new MessageEvent("message", { data: { type: "ready" } })), 0);
         else if (data.type === "frame") {
           data.frame?.close();
+          if (workerSilent) return;
           const p = (x: number, y: number) => ({ x, y, z: 0, visibility: 1, in_frame: true });
-          const points = [p(1, 0), p(0, 0), p(Math.cos(angle * Math.PI / 180), Math.sin(angle * Math.PI / 180))];
+          const points = trackingLost ? [] : [p(1, 0), p(0, 0), p(Math.cos(angle * Math.PI / 180), Math.sin(angle * Math.PI / 180))];
           setTimeout(() => this.onmessage?.(new MessageEvent("message", { data: { type: "pose", points, time: data.time } })), 0);
         }
       }
@@ -71,17 +81,59 @@ async function syntheticPose(page: Page) {
 }
 
 async function repetition(page: Page) {
-  await expect(page.getByRole("status")).toContainText("움직임을 측정");
+  await expect(page.getByRole("status")).toContainText("측정 중");
   await page.waitForTimeout(220);
   await page.evaluate(() => window.dispatchEvent(new CustomEvent("fixture-angle", { detail: 80 })));
   await page.waitForTimeout(220);
   await page.evaluate(() => window.dispatchEvent(new CustomEvent("fixture-angle", { detail: 160 })));
 }
 
+test("카메라 인식이 끊겨도 저장된 횟수와 단계가 유지된다", async ({ page, request }) => {
+  const reset = await request.post("http://127.0.0.1:8091/test/reset?repetitions=3");
+  expect(reset.ok()).toBe(true);
+  ({ requestId, curriculumId } = await reset.json());
+  await syntheticPose(page);
+  const id = await begin(page, 3);
+  await repetition(page);
+
+  const progress = page.getByRole("region", { name: "운동 진행 상황" });
+  const exercise = page.getByRole("heading", { name: "테스트 운동" });
+  const camera = page.locator(".hm-live-camera video");
+  const status = page.getByRole("status");
+  await expect(exercise).toBeVisible();
+  await expect(status).toHaveText("측정 중");
+  const [titleBox, cameraBox, progressBox, statusBox] = await Promise.all(
+    [exercise, camera, progress, status].map((element) => element.boundingBox()),
+  );
+  expect(titleBox!.y + titleBox!.height).toBeLessThan(cameraBox!.y);
+  expect(cameraBox!.y + cameraBox!.height).toBeLessThan(progressBox!.y);
+  expect(cameraBox!.y + cameraBox!.height).toBeLessThan(statusBox!.y);
+  await expect(progress.getByText("1 / 3", { exact: true })).toBeVisible();
+  await expect(progress.getByText("2회", { exact: true })).toBeVisible();
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent("fixture-tracking", { detail: true })));
+  await expect(page.getByRole("status")).toContainText("판정 불가");
+
+  const stored = await request.get("http://127.0.0.1:8081/api/workout-sessions/" + id, {
+    headers: { Authorization: "Bearer " + ownerToken },
+  });
+  expect(await stored.json()).toMatchObject({ current_repetitions: 1, current_stage_index: 1, status: "in_progress" });
+  await expect(page.locator(".hm-eyebrow")).toContainText("진행 단계 1 / 5");
+  await expect(progress.getByText("1 / 3", { exact: true })).toBeVisible();
+
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent("fixture-tracking", { detail: false })));
+  await repetition(page);
+  await expect(progress.getByText("2 / 3", { exact: true })).toBeVisible();
+
+  await page.evaluate(() => window.dispatchEvent(new Event("fixture-worker-silent")));
+  await expect(page.getByRole("status")).toContainText("판정 불가");
+  await expect(progress.getByText("2 / 3", { exact: true })).toBeVisible();
+  await expect(page.locator(".hm-eyebrow")).toContainText("진행 단계 1 / 5");
+});
+
 test("실제 MediaPipe WASM·모델을 worker에서 기동하고 카메라를 일시정지·복원한다", async ({ page, request }) => {
   const errors: string[] = []; page.on("pageerror", (e) => errors.push(e.message));
   const id = await begin(page);
-  await expect(page.getByRole("status")).toContainText(/주요 관절|움직임을 측정/, { timeout: 30_000 });
+  await expect(page.getByRole("status")).toContainText(/판정 불가|측정 중/, { timeout: 30_000 });
   let hidWhileSaving = false;
   await page.route("**/workout?sessionId=*", async (route) => {
     if (!hidWhileSaving && route.request().method() === "POST" && route.request().postData()?.includes('"pause"')) {
@@ -100,7 +152,7 @@ test("실제 MediaPipe WASM·모델을 worker에서 기동하고 카메라를 �
   await page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, get: () => false }); });
   await expect(page.getByText("0 / 1", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "이어서 운동하기" }).click();
-  await expect(page.getByRole("heading", { name: "광석 채굴", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "테스트 운동", exact: true })).toBeVisible();
   await page.waitForTimeout(200);
   const resumed = await (await request.get(`http://127.0.0.1:8081/api/workout-sessions/${id}`, { headers: { Authorization: `Bearer ${ownerToken}` } })).json();
   expect(resumed).toMatchObject({ status: "in_progress", version: 3 });
@@ -120,15 +172,16 @@ test("카메라 반복 신호→실제 5단계 완료→보석·설문·기록�
   await syntheticPose(page);
   const id = await begin(page);
   for (let stage = 1; stage <= 5; stage++) {
-    await expect(page.locator(".hm-eyebrow")).toContainText(`STAGE ${stage} / 5`);
+    await expect(page.locator(".hm-eyebrow")).toContainText(`진행 단계 ${stage} / 5`);
     await repetition(page);
-    if (stage < 5) await expect(page.locator(".hm-eyebrow")).toContainText(`STAGE ${stage + 1} / 5`);
+    if (stage < 5) await expect(page.locator(".hm-eyebrow")).toContainText(`진행 단계 ${stage + 1} / 5`);
   }
   await expect(page).toHaveURL(new RegExp(`/workout/complete\\?sessionId=${id}`));
   await expect(page.getByText("5 / 5 단계 완료", { exact: true })).toBeVisible();
   await expect(page.getByRole("img", { name: "완성된 보석" })).toBeVisible();
   await page.getByRole("link", { name: "오늘의 운동 느낌 남기기" }).click();
   await expect(page).toHaveURL(new RegExp(`/feedback\\?sessionId=${id}`));
+  await page.getByRole("link", { name: "기존 설문으로 응답하기" }).click();
   await page.getByRole("button", { name: "근육통 없음", exact: true }).click();
   await page.getByRole("button", { name: "난이도 3", exact: true }).click();
   await page.getByRole("button", { name: "재미 4", exact: true }).click();
@@ -142,7 +195,9 @@ test("카메라 반복 신호→실제 5단계 완료→보석·설문·기록�
   // 제공받은 MVP allow_reuse=true 정책에서 이전 시작 영수증으로 되돌아가지 않는다.
   expect((await request.post("http://127.0.0.1:8091/test/allow-reuse")).ok()).toBe(true);
   await page.goto(`/camera?curriculumId=${curriculumId}`);
-  await page.getByRole("button", { name: "카메라 허용하고 운동 시작" }).click();
+  await page.getByRole("button", { name: "촬영 준비로" }).click();
+  await page.getByRole("button", { name: "카메라 연결하기" }).click();
+  await page.getByRole("button", { name: "구도 확인 완료, 운동 시작" }).click();
   await expect(page).toHaveURL(/\/workout\?sessionId=/);
   expect(new URL(page.url()).searchParams.get("sessionId")).not.toBe(id);
   await expect(page.getByText("0 / 1", { exact: true })).toBeVisible();
@@ -154,7 +209,7 @@ test("같은 단계의 연속 반복은 서버 응답 직후에도 다음 왕복
   ({ requestId, curriculumId } = await reset.json());
   await syntheticPose(page);
   const id = await begin(page, 3);
-  await expect(page.getByRole("status")).toContainText("움직임을 측정");
+  await expect(page.getByRole("status")).toContainText("측정 중");
   await page.route("**/workout?sessionId=*", async (route) => {
     if (route.request().method() !== "POST") { await route.continue(); return; }
     const response = await route.fetch();
@@ -170,10 +225,10 @@ test("같은 단계의 연속 반복은 서버 응답 직후에도 다음 왕복
     await page.evaluate(() => window.dispatchEvent(new CustomEvent("fixture-angle", { detail: 160 })));
     if (count === 2) {
       await expect(page.getByText("2 / 3", { exact: true })).toBeVisible();
-      await expect(page.locator(".hm-eyebrow")).toContainText("STAGE 1 / 5");
+      await expect(page.locator(".hm-eyebrow")).toContainText("진행 단계 1 / 5");
     }
   }
-  await expect(page.locator(".hm-eyebrow")).toContainText("STAGE 2 / 5");
+  await expect(page.locator(".hm-eyebrow")).toContainText("진행 단계 2 / 5");
   const session = await (await request.get(`http://127.0.0.1:8081/api/workout-sessions/${id}`, { headers: { Authorization: `Bearer ${ownerToken}` } })).json();
   expect(session.completed_stage_count).toBe(1);
   expect(session.stage_results[0].completed_repetitions).toBe(3);
@@ -194,7 +249,7 @@ test("반복 저장 응답 유실 후 같은 이벤트 재시도는 횟수를 �
   await repetition(page);
   await expect(page.getByRole("button", { name: "같은 요청 결과 다시 확인" })).toBeVisible();
   await page.getByRole("button", { name: "같은 요청 결과 다시 확인" }).click();
-  await expect(page.locator(".hm-eyebrow")).toContainText("STAGE 2 / 5");
+  await expect(page.locator(".hm-eyebrow")).toContainText("진행 단계 2 / 5");
   const saved = await (await request.get(`http://127.0.0.1:8081/api/workout-sessions/${id}`, { headers: { Authorization: `Bearer ${ownerToken}` } })).json();
   expect(saved).toMatchObject({ version: 2, current_stage_index: 2, current_repetitions: 0, completed_stage_count: 1 });
   expect(dropped).toBe(true);
@@ -221,8 +276,10 @@ test("카메라 권한 거절은 실제 세션을 만들거나 단계를 진행�
   await page.goto(`/routine/generation/${requestId}`);
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "이 루틴 확정하고 준비하기" }).click();
-  await page.getByRole("button", { name: "카메라 허용하고 운동 시작" }).click();
-  await expect(page.getByRole("alert").filter({ hasText: "카메라 권한을 허용해야" })).toBeVisible();
+  await page.getByRole("button", { name: "촬영 준비로" }).click();
+  await page.getByRole("button", { name: "카메라 연결하기" }).click();
+  await expect(page.getByRole("button", { name: "구도 확인 완료, 운동 시작" })).toHaveCount(0);
+  await expect(page.getByRole("alert").filter({ hasText: "카메라를 연결하지 못했어요" })).toBeVisible();
   const current = await (await request.get("http://127.0.0.1:8081/api/workout-sessions/current", { headers: { Authorization: `Bearer ${ownerToken}` } })).json();
   expect(current.session).toBeNull();
   await expect(page).toHaveURL(/\/camera\?curriculumId=/);
@@ -231,9 +288,16 @@ test("카메라 권한 거절은 실제 세션을 만들거나 단계를 진행�
 test("30초 무동작은 저장한 단계·횟수를 유지한 채 자동 일시정지한다", async ({ page, request }) => {
   await syntheticPose(page);
   await page.clock.install();
+  await page.addInitScript(() => {
+    // Retime synthetic video frames together with the browser clock.
+    Object.defineProperty(HTMLVideoElement.prototype, "currentTime", {
+      configurable: true,
+      get: () => performance.now() / 1000,
+    });
+  });
   const id = await begin(page);
-  await expect(page.getByRole("status")).toContainText("움직임을 측정");
-  await page.clock.fastForward(31_000);
+  await expect(page.getByRole("status")).toContainText("측정 중");
+  await page.clock.runFor(31_000);
   await expect(page.getByRole("heading", { name: "잠시 쉬고 있어요" })).toBeVisible();
   const saved = await (await request.get(`http://127.0.0.1:8081/api/workout-sessions/${id}`, { headers: { Authorization: `Bearer ${ownerToken}` } })).json();
   expect(saved).toMatchObject({ status: "paused", current_stage_index: 1, current_repetitions: 0, completed_stage_count: 0 });

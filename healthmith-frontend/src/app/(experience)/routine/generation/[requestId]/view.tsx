@@ -92,14 +92,17 @@ export function GeneratedRoutineView({ requestId }: { requestId: string }) {
   }
 
   return <>
-    <PageIntro eyebrow="YOUR QUEST / 생성된 초안" title="오늘의 운동 설계도" description="백엔드가 생성한 단계와 안내를 확인해 주세요." />
+    <PageIntro eyebrow="YOUR QUEST / 생성된 초안" title="오늘의 운동 설계도" description="운동 순서와 목표 횟수를 확인해 주세요." />
     <div className="hm-routine-meta"><span className="is-draft">{curriculum.status === "confirmed" ? "확정한 커리큘럼" : "커리큘럼 초안"}</span><span>버전 {curriculum.version}</span></div>
     <ol className="hm-routine-list">
       {curriculum.stages.map((stage) => (
-        <li key={stage.stage_index} className="hm-routine-item">
-          <h2>{String(stage.stage_index).padStart(2, "0")} {stage.stage_name}</h2>
-          <p className="hm-exercise">{stage.exercise_name} · {stage.target_repetitions}회 · {stage.pace_instruction}</p>
-          <p className="hm-guide">{stage.internal_focus_instruction}</p>
+        <li key={stage.stage_index} className="hm-routine-item is-generated">
+          <span className="hm-stage-number" aria-hidden="true">{String(stage.stage_index).padStart(2, "0")}</span>
+          <div>
+            <h2>{stage.exercise_name}</h2>
+            <p className="hm-exercise">{stage.stage_name} · {stage.target_repetitions}회 · {stage.pace_instruction}</p>
+            <p className="hm-guide">{stage.internal_focus_instruction}</p>
+          </div>
         </li>
       ))}
     </ol>

@@ -29,10 +29,10 @@ const EMPTY_INPUT: SurveyFormInput = {
   priorityParts: [],
 };
 
-const fieldClass = "space-y-3 rounded-2xl border border-[#DFE3F0] bg-white p-5";
-const legendClass = "px-1 text-base font-semibold text-[#202944]";
+const fieldClass = "space-y-3 rounded-2xl border border-[#413840] bg-black p-5";
+const legendClass = "px-1 text-base font-semibold text-[#FFFFFF]";
 const optionClass =
-  "flex min-h-11 cursor-pointer items-center gap-2 whitespace-nowrap rounded-xl border border-[#DFE3F0] px-3 text-sm has-checked:border-[#7355F5] has-checked:bg-[#ECE9FF] has-focus-visible:ring-2 has-focus-visible:ring-[#7355F5] has-disabled:cursor-not-allowed has-disabled:opacity-50";
+  "flex min-h-11 cursor-pointer items-center gap-2 whitespace-nowrap rounded-xl border border-[#413840] px-3 text-sm has-checked:border-[#D82045] has-checked:bg-[#2D121B] has-focus-visible:ring-2 has-focus-visible:ring-[#D82045] has-disabled:cursor-not-allowed has-disabled:opacity-50";
 
 function toggle(parts: BodyPart[], part: BodyPart): BodyPart[] {
   return parts.includes(part) ? parts.filter((item) => item !== part) : [...parts, part];
@@ -50,7 +50,7 @@ function errorsFromServer(result: Extract<SubmitResult, { state: "invalid" }>): 
 function ErrorText({ id, message }: { id: string; message: string | undefined }) {
   if (!message) return null;
   return (
-    <p id={id} className="rounded-lg bg-[#FFF0F5] px-3 py-2 text-sm text-[#AA4265]">
+    <p id={id} className="rounded-lg bg-[#261017] px-3 py-2 text-sm text-[#FF9CAF]">
       {message}
     </p>
   );
@@ -135,34 +135,34 @@ export function SurveyForm() {
   if (result?.state === "saved") {
     const saved = result.submission;
     return (
-      <section role="status" aria-labelledby="saved-title" className="space-y-4 rounded-2xl border border-[#DFE3F0] bg-white p-6">
-        <h2 id="saved-title" className="text-lg font-bold text-[#202944]">
+      <section role="status" aria-labelledby="saved-title" className="space-y-4 rounded-2xl border border-[#413840] bg-black p-6">
+        <h2 id="saved-title" className="text-lg font-bold text-[#FFFFFF]">
           {editing ? "사전조사 내용을 수정했어요" : "사전조사 내용을 저장했어요"}
         </h2>
-        <p className="text-sm text-[#717C95]">
+        <p className="text-sm text-[#CEC8CE]">
           저장한 내용을 확인하고 운동 초안 만들기를 눌러 주세요.
         </p>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-          <dt className="text-[#717C95]">우선 부위</dt>
+          <dt className="text-[#CEC8CE]">우선 부위</dt>
           <dd>{saved.answers.priority_body_parts.join(" → ")}</dd>
-          <dt className="text-[#717C95]">강도</dt>
+          <dt className="text-[#CEC8CE]">강도</dt>
           <dd>{saved.answers.intensity}</dd>
-          <dt className="text-[#717C95]">저장 시각</dt>
+          <dt className="text-[#CEC8CE]">저장 시각</dt>
           <dd>{new Date(saved.created_at).toLocaleString("ko-KR")}</dd>
         </dl>
         <button
           type="button"
           disabled={pending}
-          className="min-h-11 rounded-xl bg-[#ECE9FF] px-4 text-sm font-medium text-[#202944] disabled:opacity-60"
+          className="min-h-11 rounded-xl bg-[#2D121B] px-4 text-sm font-medium text-[#FFFFFF] disabled:opacity-60"
           onClick={() => openSavedSurvey(saved.id)}
         >
           저장한 내용 수정하기
         </button>
-        {editMessage && <p role="alert" className="text-sm text-[#AA4265]">{editMessage}</p>}
+        {editMessage && <p role="alert" className="text-sm text-[#FF9CAF]">{editMessage}</p>}
         <button
           type="button"
           disabled={pending}
-          className="min-h-12 w-full rounded-xl bg-[#7355F5] px-4 text-base font-semibold text-white disabled:opacity-60"
+          className="min-h-12 w-full rounded-xl bg-[#D82045] px-4 text-base font-semibold text-white disabled:opacity-60"
           onClick={() => startTransition(async () => {
             setGenerationMessage(null);
             const response = await createCurriculumGeneration(saved.id);
@@ -172,11 +172,11 @@ export function SurveyForm() {
         >
           {pending ? "초안을 준비하는 중" : "운동 초안 만들기"}
         </button>
-        {generationMessage && <p role="alert" className="text-sm text-[#AA4265]">{generationMessage}</p>}
+        {generationMessage && <p role="alert" className="text-sm text-[#FF9CAF]">{generationMessage}</p>}
         <button
           type="button"
           disabled={pending}
-          className="min-h-11 rounded-xl border border-[#DFE3F0] px-4 text-sm font-medium"
+          className="min-h-11 rounded-xl border border-[#413840] px-4 text-sm font-medium"
           onClick={() => {
             setInput(EMPTY_INPUT);
             setEditing(null);
@@ -224,7 +224,7 @@ export function SurveyForm() {
 
       <fieldset className={fieldClass} disabled={limitationsDisabled} aria-describedby={describedBy("limitationParts")}>
         <legend className={legendClass}>불편한 부위</legend>
-        <p className="text-sm text-[#717C95]">운동을 피해야 하는 부위를 모두 골라 주세요.</p>
+        <p className="text-sm text-[#CEC8CE]">운동을 피해야 하는 부위를 모두 골라 주세요.</p>
         <div className="grid grid-cols-3 gap-2">
           {BODY_PARTS.map((part) => (
             <label key={part} className={optionClass}>
@@ -247,7 +247,7 @@ export function SurveyForm() {
 
       <fieldset className={fieldClass} aria-describedby={describedBy("priorityParts")}>
         <legend className={legendClass}>먼저 운동하고 싶은 부위</legend>
-        <p className="text-sm text-[#717C95]">고른 순서가 우선순위가 됩니다.</p>
+        <p className="text-sm text-[#CEC8CE]">고른 순서가 우선순위가 됩니다.</p>
         <div className="grid grid-cols-3 gap-2">
           {BODY_PARTS.map((part) => {
             const rank = input.priorityParts.indexOf(part);
@@ -263,7 +263,7 @@ export function SurveyForm() {
                 />
                 {part}
                 {rank >= 0 && (
-                  <span className="ml-auto inline-flex size-6 items-center justify-center rounded-full bg-[#7355F5] text-xs font-semibold text-white">
+                  <span className="ml-auto inline-flex size-6 items-center justify-center rounded-full bg-[#D82045] text-xs font-semibold text-white">
                     {rank + 1}
                     <span className="sr-only">순위</span>
                   </span>
@@ -304,7 +304,7 @@ export function SurveyForm() {
               onChange={(event) => update({ customText: event.target.value }, ["customText"])}
               aria-invalid={errors.customText ? true : undefined}
               aria-describedby={describedBy("customText")}
-              className="w-full rounded-xl border border-[#DFE3F0] p-3 text-sm"
+              className="w-full rounded-xl border border-[#413840] p-3 text-sm"
             />
             <ErrorText id="customText-error" message={errors.customText} />
           </div>
@@ -326,27 +326,27 @@ export function SurveyForm() {
           onChange={(event) => update({ intensity: event.target.value }, ["intensity"])}
           aria-invalid={errors.intensity ? true : undefined}
           aria-describedby={describedBy("intensity")}
-          className="block min-h-11 w-full rounded-xl border border-[#DFE3F0] px-3 text-sm"
+          className="block min-h-11 w-full rounded-xl border border-[#413840] px-3 text-sm"
         />
         <ErrorText id="intensity-error" message={errors.intensity} />
       </div>
 
       <div role="status" aria-live="polite" className="min-h-6 text-sm">
-        {pending && <p className="text-[#717C95]">저장하는 중이에요…</p>}
-        {!pending && result && <p className="rounded-lg bg-[#FFF0F5] px-3 py-2 text-[#AA4265]">{result.message}</p>}
+        {pending && <p className="text-[#CEC8CE]">저장하는 중이에요…</p>}
+        {!pending && result && <p className="rounded-lg bg-[#261017] px-3 py-2 text-[#FF9CAF]">{result.message}</p>}
       </div>
 
-      {editMessage && <p role="alert" className="rounded-lg bg-[#FFF0F5] px-3 py-2 text-sm text-[#AA4265]">{editMessage}</p>}
+      {editMessage && <p role="alert" className="rounded-lg bg-[#261017] px-3 py-2 text-sm text-[#FF9CAF]">{editMessage}</p>}
       {needsReload && editing && <button
         type="button"
         disabled={pending}
-        className="min-h-11 rounded-xl border border-[#DFE3F0] px-4 text-sm font-medium"
+        className="min-h-11 rounded-xl border border-[#413840] px-4 text-sm font-medium"
         onClick={() => openSavedSurvey(editing.id)}
       >최신 내용 다시 불러오기 (작성 중인 내용 교체)</button>}
       <button
         type="submit"
         disabled={pending || needsReload}
-        className="min-h-12 w-full rounded-xl bg-[#7355F5] text-base font-semibold text-white disabled:opacity-60"
+        className="min-h-12 w-full rounded-xl bg-[#D82045] text-base font-semibold text-white disabled:opacity-60"
       >
         {pending ? (editing ? "수정 중" : "저장 중") : (editing ? "수정 내용 저장" : "사전조사 저장")}
       </button>
