@@ -1,6 +1,6 @@
 import { FRAME_HEIGHT, FRAME_WIDTH, PushUpMotionCounter } from "./push-up-motion.mjs";
 
-const counter = new PushUpMotionCounter();
+let counter = new PushUpMotionCounter();
 let context;
 
 self.onmessage = ({ data }) => {
@@ -17,6 +17,7 @@ self.onmessage = ({ data }) => {
   if (data.type !== "frame") return;
 
   try {
+    if (data.reset) counter = new PushUpMotionCounter();
     context.drawImage(data.frame, 0, 0, FRAME_WIDTH, FRAME_HEIGHT);
     const rgba = context.getImageData(0, 0, FRAME_WIDTH, FRAME_HEIGHT).data;
     const pixels = new Uint8Array(FRAME_WIDTH * FRAME_HEIGHT);

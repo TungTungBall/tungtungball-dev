@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { RepetitionCounter, type Landmark, type CameraRule } from "@/lib/healthmith/pose-counter";
+
+const CAMERA_SIGNAL_TIMEOUT_MS = 1_000;
 
 type CameraMessage =
   | { type: "ready" }
@@ -9,16 +11,20 @@ type CameraMessage =
   | { type: "pose"; points: Landmark[]; time: number }
   | { type: "motion"; completed: boolean; moving: boolean; tracking: boolean };
 
-export function PoseCamera({ rule, enabled, onRepetition, onPause }: { rule: CameraRule; enabled: boolean; onRepetition: () => void; onPause: (reason: "manual" | "no_motion") => void }) {
+export function PoseCamera({ rule, enabled, onRepetition, onPause, children }: { children: ReactNode; rule: CameraRule; enabled: boolean; onRepetition: () => void; onPause: (reason: "manual" | "no_motion") => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const callbacks = useRef({ onRepetition, onPause, enabled });
-  const [message, setMessage] = useState("카메라와 자세 인식을 준비하고 있어요.");
+  const [status, setStatus] = useState<"preparing" | "tracking" | "unavailable">("preparing");
+  const guide = "카메라를 고정하고 밝은 곳에서 운동해 주세요. 푸시업은 정면에서 상체가 화면 중앙에 오도록, 관절을 사용하는 운동은 필요한 관절이 모두 보이도록 맞춰 주세요.";
   useEffect(() => { callbacks.current = { onRepetition, onPause, enabled }; }, [onRepetition, onPause, enabled]);
   useEffect(() => {
     let disposed = false, busy = false, ready = false, framePending = false;
     let stream: MediaStream | undefined, worker: Worker | undefined, animation = 0;
     let lastVideoTime = -1, lastFrameTime = 0, lastMotion = performance.now();
     let paused = false;
+    let lastResultTime = performance.now();
+    let resetOnNextFrame = false;
+    let tracking = false;
     const counter = "method" in rule ? null : new RepetitionCounter(rule);
     const pause = (reason: "manual" | "no_motion") => {
       if (disposed || paused) return;
@@ -26,18 +32,21 @@ export function PoseCamera({ rule, enabled, onRepetition, onPause }: { rule: Cam
       stream?.getTracks().forEach((t) => t.stop());
       callbacks.current.onPause(reason);
     };
-    const fail = (message: string) => {
+    const fail = () => {
       if (disposed) return;
-      setMessage(message); pause("manual");
+      setStatus("unavailable");
+      pause("manual");
     };
     const visibility = () => { if (document.hidden) pause("manual"); };
-    const initTimeout = setTimeout(() => fail("카메라 측정을 준비하지 못했어요. 연결을 확인하고 다시 시작해 주세요."), 30_000);
+    const initTimeout = setTimeout(() => fail(), 30_000);
     async function start() {
       try {
         if (!navigator.mediaDevices?.getUserMedia || typeof Worker === "undefined" || typeof createImageBitmap === "undefined") throw new Error();
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
         if (disposed || paused) { stream.getTracks().forEach((t) => t.stop()); return; }
-        for (const track of stream.getVideoTracks()) track.addEventListener("ended", () => fail("카메라가 꺼져 운동을 일시정지했어요."));
+        const [videoTrack] = stream.getVideoTracks();
+        if (!videoTrack) throw new Error("Camera video track unavailable");
+        videoTrack.addEventListener("ended", fail);
         const video = videoRef.current;
         if (!video) return;
         video.srcObject = stream; await video.play();
@@ -45,21 +54,18 @@ export function PoseCamera({ rule, enabled, onRepetition, onPause }: { rule: Cam
         worker = counter
           ? new Worker("/pose-worker.js")
           : new Worker("/push-up-worker.mjs", { type: "module" });
-        worker.onerror = () => fail("자세 인식을 시작하지 못했어요. 운동을 일시정지했어요.");
-        const guide = counter
-          ? "주요 관절이 보이도록 위치와 조명을 조절해 주세요."
-          : "카메라를 고정하고 화면 중앙에서 푸시업을 해 주세요.";
+        worker.onerror = () => fail();
         worker.onmessage = ({ data }: MessageEvent<CameraMessage>) => {
           if (disposed || paused) return;
           if (data.type === "ready") {
             clearTimeout(initTimeout);
             ready = true;
             lastMotion = performance.now();
-            setMessage(guide);
+            lastResultTime = lastMotion;
             return;
           }
           if (data.type === "error") {
-            fail("자세 인식이 중단돼 운동을 일시정지했어요.");
+            fail();
             return;
           }
 
@@ -69,35 +75,59 @@ export function PoseCamera({ rule, enabled, onRepetition, onPause }: { rule: Cam
             lastMotion = performance.now();
             return;
           }
+          const now = performance.now();
+          if (now - lastFrameTime >= CAMERA_SIGNAL_TIMEOUT_MS || videoTrack.muted) return;
           const result = data.type === "motion" && !counter
             ? data
             : data.type === "pose" && counter
               ? counter.update(data.points, data.time)
               : null;
           if (!result) return;
-          if (result.moving) lastMotion = performance.now();
-          setMessage(result.tracking ? "움직임을 측정하고 있어요." : guide);
-          if (result.completed) callbacks.current.onRepetition();
+          lastResultTime = now;
+          tracking = result.tracking;
+          setStatus(tracking ? "tracking" : "unavailable");
+          if (!tracking || result.moving) lastMotion = now;
+          if (tracking && result.completed) callbacks.current.onRepetition();
         };
         worker.postMessage({ type: "init" });
         const frame = async (time: number) => {
           if (disposed || paused) return;
           animation = requestAnimationFrame(frame);
-          if (!callbacks.current.enabled) { counter?.suspend(); lastMotion = time; return; }
-          if (ready && time - lastMotion >= 30_000) { pause("no_motion"); return; }
+          if (!callbacks.current.enabled) {
+            counter?.suspend();
+            lastMotion = time;
+            lastResultTime = time;
+            return;
+          }
+          if (ready && (videoTrack.muted || time - lastResultTime >= CAMERA_SIGNAL_TIMEOUT_MS)) {
+            tracking = false;
+            setStatus("unavailable");
+            counter?.reset();
+            resetOnNextFrame = true;
+            lastMotion = time;
+          }
+          if (tracking && time - lastMotion >= 30_000) { pause("no_motion"); return; }
           const mediaTime = video.currentTime;
           const tooSoon = counter ? time - lastFrameTime < 66 : mediaTime - lastVideoTime < 0.06;
-          if (!ready || busy || framePending || tooSoon || video.readyState < 2 || mediaTime === lastVideoTime) return;
+          if (!ready || videoTrack.muted || busy || framePending || tooSoon || video.readyState < 2 || mediaTime === lastVideoTime) return;
           lastVideoTime = mediaTime; lastFrameTime = time; framePending = true;
           try {
             const bitmap = await createImageBitmap(video);
             if (disposed || paused || !ready) { bitmap.close(); return; }
-            busy = true; worker?.postMessage({ type: "frame", frame: bitmap, time: counter ? time : mediaTime * 1000 }, [bitmap]);
-          } catch { fail("카메라 영상을 읽지 못해 운동을 일시정지했어요."); }
+            if (resetOnNextFrame) counter?.reset();
+            busy = true;
+            worker?.postMessage({
+              type: "frame",
+              frame: bitmap,
+              time: counter ? time : mediaTime * 1000,
+              reset: resetOnNextFrame,
+            }, [bitmap]);
+            resetOnNextFrame = false;
+          } catch { fail(); }
           finally { framePending = false; }
         };
         animation = requestAnimationFrame(frame);
-      } catch { fail("카메라 권한과 지원 브라우저를 확인해 주세요. 운동을 일시정지했어요."); }
+      } catch { fail(); }
     }
     document.addEventListener("visibilitychange", visibility);
     void start();
@@ -107,5 +137,16 @@ export function PoseCamera({ rule, enabled, onRepetition, onPause }: { rule: Cam
       worker?.terminate(); stream?.getTracks().forEach((t) => t.stop());
     };
   }, [rule]);
-  return <><div className="hm-camera-stage"><video ref={videoRef} autoPlay playsInline muted aria-label="운동 자세 측정 카메라" /></div><p role="status" className="hm-helper">{message}</p></>;
+  return <section className="hm-live-camera" aria-label="카메라 측정">
+    <div className="hm-camera-stage"><video ref={videoRef} autoPlay playsInline muted aria-label="운동 자세 측정 카메라" /></div>
+    <div className="hm-live-readout">
+      {children}
+      <p className="hm-camera-status" data-camera-status={status} role="status">
+        {status === "preparing" && "카메라 준비 중"}
+        {status === "tracking" && "측정 중"}
+        {status === "unavailable" && "판정 불가"}
+      </p>
+    </div>
+    <p className="hm-helper">{guide}</p>
+  </section>;
 }
