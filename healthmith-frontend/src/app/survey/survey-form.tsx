@@ -7,6 +7,7 @@ import { loadSurvey, submitSurvey, updateSurvey } from "./actions";
 import { createCurriculumGeneration } from "./generation-actions";
 import {
   BODY_PARTS,
+  PAIN_BODY_PARTS,
   FREE_PURPOSE,
   MAX_INTENSITY,
   MIN_INTENSITY,
@@ -21,6 +22,7 @@ import {
 import { fieldFromServerPath, validateSurvey } from "./validation";
 
 const EMPTY_INPUT: SurveyFormInput = {
+  painBodyParts: [],
   limitationsPresent: null,
   limitationParts: [],
   purposeType: null,
@@ -83,6 +85,7 @@ export function SurveyForm() {
     if (detail.state === "loaded") {
       setEditing(detail.submission);
       setInput({
+        painBodyParts: detail.submission.answers.pain_body_parts ?? [],
         limitationsPresent: detail.submission.answers.physical_limitations.present,
         limitationParts: detail.submission.answers.physical_limitations.body_parts,
         purposeType: detail.submission.answers.purpose.type,
@@ -145,6 +148,8 @@ export function SurveyForm() {
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
           <dt className="text-[#CEC8CE]">우선 부위</dt>
           <dd>{saved.answers.priority_body_parts.join(" → ")}</dd>
+          <dt className="text-[#CEC8CE]">통증 부위</dt>
+          <dd>{saved.answers.pain_body_parts?.join(", ") || "없음"}</dd>
           <dt className="text-[#CEC8CE]">강도</dt>
           <dd>{saved.answers.intensity}</dd>
           <dt className="text-[#CEC8CE]">저장 시각</dt>
@@ -197,7 +202,8 @@ export function SurveyForm() {
   return (
     <form noValidate onSubmit={handleSubmit} aria-busy={pending} className="space-y-5">
       <fieldset className={fieldClass} aria-describedby={describedBy("limitations")}>
-        <legend className={legendClass}>몸에 불편한 곳이 있나요?</legend>
+        <legend className={legendClass}>운동할 수 없는 부위가 있나요?</legend>
+        <p className="text-sm text-[#CEC8CE]">신체 제약으로 운동 자체가 어려운 경우에 선택해 주세요. 통증은 아래에서 따로 골라 주세요.</p>
         <div className="grid grid-cols-2 gap-2">
           {[
             { value: false, label: "없어요" },
@@ -223,7 +229,7 @@ export function SurveyForm() {
       </fieldset>
 
       <fieldset className={fieldClass} disabled={limitationsDisabled} aria-describedby={describedBy("limitationParts")}>
-        <legend className={legendClass}>불편한 부위</legend>
+        <legend className={legendClass}>운동 불가 부위</legend>
         <p className="text-sm text-[#CEC8CE]">운동을 피해야 하는 부위를 모두 골라 주세요.</p>
         <div className="grid grid-cols-3 gap-2">
           {BODY_PARTS.map((part) => (
@@ -243,6 +249,21 @@ export function SurveyForm() {
           ))}
         </div>
         <ErrorText id="limitationParts-error" message={errors.limitationParts} />
+      </fieldset>
+
+      <fieldset className={fieldClass} aria-describedby={errors.painBodyParts ? "pain-help painBodyParts-error" : "pain-help"}>
+        <legend className={legendClass}>통증이 있는 부위 · 선택</legend>
+        <p id="pain-help" className="text-sm text-[#CEC8CE]">통증이 없다면 선택하지 않아도 돼요. 운동 불가 부위와 별도로, 통증이 있는 동작의 횟수와 범위를 줄이는 데 반영해요. 통증 위치만으로 질환을 진단하지 않아요.</p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {PAIN_BODY_PARTS.map((part) => <label key={part} className={optionClass}>
+            <input type="checkbox" name="pain-body-parts" value={part} checked={input.painBodyParts?.includes(part) ?? false}
+              onChange={() => update({ painBodyParts: input.painBodyParts?.includes(part) ? input.painBodyParts.filter(item => item !== part) : [...(input.painBodyParts ?? []), part] }, ["painBodyParts"])}
+              aria-invalid={errors.painBodyParts ? true : undefined} />
+            {part}
+          </label>)}
+        </div>
+        <p className="text-sm text-[#CEC8CE]">통증이 심해지면 해당 동작을 멈추고, 통증이 지속되면 전문가와 상담해 주세요.</p>
+        <ErrorText id="painBodyParts-error" message={errors.painBodyParts} />
       </fieldset>
 
       <fieldset className={fieldClass} aria-describedby={describedBy("priorityParts")}>

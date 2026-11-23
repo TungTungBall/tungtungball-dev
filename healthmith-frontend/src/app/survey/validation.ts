@@ -1,5 +1,7 @@
 import {
   BODY_PARTS,
+  PAIN_BODY_PARTS,
+  type PainBodyPart,
   FREE_PURPOSE,
   MAX_INTENSITY,
   MIN_INTENSITY,
@@ -21,6 +23,8 @@ const INTENSITY_PATTERN = /^\d+$/;
 /** 서버 field_errors 경로 → 화면 칸. 모르는 경로는 null (전체 안내로만 표시). */
 export function fieldFromServerPath(path: string): FormField | null {
   switch (path) {
+    case "answers.pain_body_parts":
+      return "painBodyParts";
     case "answers.physical_limitations":
     case "answers.physical_limitations.present":
       return "limitations";
@@ -44,6 +48,10 @@ export function isBodyPart(value: unknown): value is BodyPart {
   return typeof value === "string" && (BODY_PARTS as readonly string[]).includes(value);
 }
 
+export function isPainBodyPart(value: unknown): value is PainBodyPart {
+  return typeof value === "string" && (PAIN_BODY_PARTS as readonly string[]).includes(value);
+}
+
 export function isPurposeType(value: unknown): value is PurposeType {
   return typeof value === "string" && (PURPOSE_TYPES as readonly string[]).includes(value);
 }
@@ -58,6 +66,9 @@ function hasDuplicate(parts: readonly string[]): boolean {
  */
 export function validateSurvey(input: SurveyFormInput): ValidationResult {
   const errors: FieldErrors = {};
+  if (input.painBodyParts !== undefined && (!Array.isArray(input.painBodyParts) || !input.painBodyParts.every(isPainBodyPart) || hasDuplicate(input.painBodyParts))) {
+    errors.painBodyParts = "통증 부위를 다시 골라 주세요.";
+  }
 
   if (input.limitationsPresent === null) {
     errors.limitations = "신체 제약이 있는지 골라 주세요.";
@@ -100,6 +111,7 @@ export function validateSurvey(input: SurveyFormInput): ValidationResult {
   return {
     ok: true,
     answers: {
+      ...(input.painBodyParts !== undefined ? { pain_body_parts: [...input.painBodyParts] } : {}),
       physical_limitations: {
         present: input.limitationsPresent,
         body_parts: input.limitationsPresent ? [...input.limitationParts] : [],
@@ -119,11 +131,12 @@ export function validateSurvey(input: SurveyFormInput): ValidationResult {
 export function parseFormInput(value: unknown): SurveyFormInput | null {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
   const record: Record<string, unknown> = { ...value };
-  const { limitationsPresent, limitationParts, purposeType, customText, intensity, priorityParts } = record;
+  const { limitationsPresent, limitationParts, purposeType, customText, intensity, priorityParts, painBodyParts } = record;
   if (limitationsPresent !== null && typeof limitationsPresent !== "boolean") return null;
   if (!Array.isArray(limitationParts) || !limitationParts.every(isBodyPart)) return null;
   if (purposeType !== null && !isPurposeType(purposeType)) return null;
   if (typeof customText !== "string" || typeof intensity !== "string") return null;
   if (!Array.isArray(priorityParts) || !priorityParts.every(isBodyPart)) return null;
-  return { limitationsPresent, limitationParts, purposeType, customText, intensity, priorityParts };
+  if (painBodyParts !== undefined && (!Array.isArray(painBodyParts) || !painBodyParts.every(isPainBodyPart))) return null;
+  return { ...(painBodyParts !== undefined ? { painBodyParts } : {}), limitationsPresent, limitationParts, purposeType, customText, intensity, priorityParts };
 }
