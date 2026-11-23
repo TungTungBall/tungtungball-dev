@@ -68,3 +68,18 @@ test("로그인 세션이 없으면 가짜 성공 없이 로그인 필요를 알
   await expect(page.getByLabel(/운동 강도/)).toHaveValue("5");
   await expect(page).toHaveURL(/\/survey\/legacy$/);
 });
+
+
+test("통증 9부위는 운동 불가 부위와 별도로 선택하고 해제할 수 있다", async ({ page }) => {
+  await chooseBasics(page);
+  await expect(page.locator('input[name="pain-body-parts"]')).toHaveCount(9);
+  const knee = page.locator('input[name="pain-body-parts"][value="무릎 앞쪽"]');
+  await knee.check();
+  await expect(page.getByText("통증 위치만으로 질환을 진단하지 않아요.", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "사전조사 저장" }).click();
+  await expect(page.locator("#priorityParts-error")).toHaveCount(0);
+  await expect(knee).toBeChecked();
+  await knee.uncheck();
+  await expect(knee).not.toBeChecked();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});

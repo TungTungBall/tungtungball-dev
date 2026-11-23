@@ -14,8 +14,14 @@ import java.util.Set;
 @Service
 public class SurveyValidationService {
     private static final Set<String> BODY_PARTS = Set.of("상체", "하체", "허리");
+    private static final Set<String> PAIN_BODY_PARTS = Set.of("목", "어깨", "팔꿈치 바깥쪽", "손목·손 저림", "허리", "고관절·엉덩이 바깥쪽", "무릎 앞쪽", "발뒤꿈치 위쪽", "발바닥·뒤꿈치 아래쪽");
     private static final Set<String> PURPOSES = Set.of("체력", "감량", "근력", "자세", "자유 입력");
     public void validate(SurveySubmissionRequest.Answers answers) {
+        var pain = answers.painBodyParts();
+        if (pain != null && (pain.stream().anyMatch(part -> part == null || !PAIN_BODY_PARTS.contains(part))
+                || new HashSet<>(pain).size() != pain.size())) {
+            throw invalid("answers.pain_body_parts");
+        }
         var purpose = answers.purpose();
         if (!PURPOSES.contains(purpose.type())) {
             throw invalid("answers.purpose.type");

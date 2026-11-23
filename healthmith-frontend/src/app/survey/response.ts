@@ -1,4 +1,4 @@
-import { isBodyPart, isPurposeType } from "./validation";
+import { isBodyPart, isPainBodyPart, isPurposeType } from "./validation";
 import type { SavedSurvey, ServerFieldError, SubmitResult, SurveyAnswers, SurveyDetail } from "./types";
 
 // 서버 응답은 unknown으로 받아 좁힌다 (CODE-STYLE 5번). as 단언으로 넘기지 않는다.
@@ -25,7 +25,12 @@ function isBodyPartArray(value: unknown): value is SurveyAnswers["priority_body_
 
 export function isSurveyAnswers(value: unknown): value is SurveyAnswers {
   if (!isRecord(value)) return false;
-  if (!hasOnlyKeys(value, ["physical_limitations", "purpose", "intensity", "priority_body_parts"])) return false;
+  const keys = ["physical_limitations", "purpose", "intensity", "priority_body_parts"];
+  if ("pain_body_parts" in value) {
+    keys.push("pain_body_parts");
+    if (!Array.isArray(value.pain_body_parts) || !value.pain_body_parts.every(isPainBodyPart) || new Set(value.pain_body_parts).size !== value.pain_body_parts.length) return false;
+  }
+  if (!hasOnlyKeys(value, keys)) return false;
   const limitations = value.physical_limitations;
   const purpose = value.purpose;
   return (
@@ -48,6 +53,7 @@ export function sameAnswers(a: SurveyAnswers, b: SurveyAnswers): boolean {
   const sameParts = (x: readonly string[], y: readonly string[]) =>
     x.length === y.length && x.every((part, index) => part === y[index]);
   return (
+    sameParts(a.pain_body_parts ?? [], b.pain_body_parts ?? []) &&
     a.physical_limitations.present === b.physical_limitations.present &&
     sameParts(a.physical_limitations.body_parts, b.physical_limitations.body_parts) &&
     a.purpose.type === b.purpose.type &&

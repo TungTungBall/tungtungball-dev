@@ -5,6 +5,10 @@
 export const BODY_PARTS = ["상체", "하체", "허리"] as const;
 export type BodyPart = (typeof BODY_PARTS)[number];
 
+/** 통증 위치만 수집하며 질환 진단을 뜻하지 않는다. */
+export const PAIN_BODY_PARTS = ["목", "어깨", "팔꿈치 바깥쪽", "손목·손 저림", "허리", "고관절·엉덩이 바깥쪽", "무릎 앞쪽", "발뒤꿈치 위쪽", "발바닥·뒤꿈치 아래쪽"] as const;
+export type PainBodyPart = (typeof PAIN_BODY_PARTS)[number];
+
 export const PURPOSE_TYPES = ["체력", "감량", "근력", "자세", "자유 입력"] as const;
 export type PurposeType = (typeof PURPOSE_TYPES)[number];
 
@@ -14,6 +18,7 @@ export const MAX_INTENSITY = 10;
 
 /** POST /api/survey-submissions 요청의 answers (API 경계, snake_case). */
 export type SurveyAnswers = {
+  pain_body_parts?: PainBodyPart[];
   physical_limitations: { present: boolean; body_parts: BodyPart[] };
   purpose: { type: PurposeType; custom_text: string | null };
   intensity: number;
@@ -33,6 +38,7 @@ export type SurveyDetail = SavedSurvey & { version: number };
 
 /** 화면 입력 상태. 아직 고르지 않은 값은 null이며 기본값으로 채우지 않는다. */
 export type SurveyFormInput = {
+  painBodyParts?: PainBodyPart[];
   limitationsPresent: boolean | null;
   limitationParts: BodyPart[];
   purposeType: PurposeType | null;
@@ -42,7 +48,7 @@ export type SurveyFormInput = {
 };
 
 /** 오류를 붙이는 화면 칸. 서버 field_errors[].field 경로를 이 이름으로 바꿔 표시한다. */
-export type FormField = "limitations" | "limitationParts" | "purpose" | "customText" | "intensity" | "priorityParts";
+export type FormField = "painBodyParts" | "limitations" | "limitationParts" | "purpose" | "customText" | "intensity" | "priorityParts";
 
 export type FieldErrors = Partial<Record<FormField, string>>;
 
