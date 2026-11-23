@@ -1,5 +1,6 @@
 package tungtungball.healthmithbackend.repository;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -17,6 +18,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 class PainAwareCurriculumIntegrationTest extends ReactiveApiIntegrationSupport {
+    @BeforeEach
+    void isolateFixtureExercise() {
+        // 다른 suite가 적용한 MVP seed의 검토된 운동이 미분류 후보 거절 검사를 우회하지 않도록 격리한다.
+        ADMIN.sql("UPDATE public.exercise_catalog SET enabled=false WHERE id<>'TEST_EX'").then().block();
+    }
+
     void classify(String tag) {
         ADMIN.sql("INSERT INTO private.exercise_motion_profiles VALUES ('TEST_EX',CAST(:tags AS jsonb)) ON CONFLICT(exercise_id) DO UPDATE SET motion_tags=EXCLUDED.motion_tags")
                 .bind("tags", mapper.writeValueAsString(List.of(tag))).then().block();
