@@ -1,0 +1,2 @@
+Wanted Sans — https://github.com/wanteddev/wanted-sans
+Unmodified variable WOFF2, SIL Open Font License; see WantedSans-OFL.txt.

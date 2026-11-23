@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import localFont from "next/font/local";
 import "./globals.css";
+import "@/components/healthmith/healthmith.css";
+import "@/components/healthmith/ruby-theme.css";
+
+const wantedSans = localFont({
+  src: "./fonts/WantedSansVariable.woff2", weight: "100 900", display: "swap", variable: "--font-wanted",
+});
 
 export const metadata: Metadata = {
   title: "헬스미스",
@@ -9,7 +16,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="ko">
+    <html lang="ko" className={wantedSans.variable}>
       <body>{children}</body>
     </html>
   );

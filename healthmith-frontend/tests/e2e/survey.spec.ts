@@ -12,7 +12,7 @@ async function chooseBasics(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
-  const response = await page.goto("/survey");
+  const response = await page.goto("/survey/legacy");
   expect(response?.status()).toBe(200);
 });
 
@@ -66,5 +66,5 @@ test("로그인 세션이 없으면 가짜 성공 없이 로그인 필요를 알
   await expect(page.getByRole("status").last()).toContainText("로그인이 필요해요");
   await expect(page.getByText("사전조사 내용을 저장했어요")).toHaveCount(0);
   await expect(page.getByLabel(/운동 강도/)).toHaveValue("5");
-  await expect(page).toHaveURL(/\/survey$/);
+  await expect(page).toHaveURL(/\/survey\/legacy$/);
 });
