@@ -1,0 +1,8 @@
+[
+  { "id": "subject_004_squat_good_side", "start_ms": 1200, "end_ms": 7800, "repetitions": 2 },
+  { "id": "subject_010_squat_good_side", "start_ms": 0, "end_ms": 8000, "repetitions": 4 },
+  { "id": "subject_016_squat_good_side", "start_ms": 500, "end_ms": 8600, "repetitions": 3 },
+  { "id": "subject_022_squat_good_side", "start_ms": 400, "end_ms": 8800, "repetitions": 4 },
+  { "id": "squat-squat-demo", "start_ms": 0, "end_ms": 15000, "repetitions": 5 },
+  { "id": "plank-plank-demo", "start_ms": 0, "end_ms": 1600, "repetitions": 0 }
+]

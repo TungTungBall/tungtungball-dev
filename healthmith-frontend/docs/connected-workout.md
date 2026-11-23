@@ -25,6 +25,8 @@ MediaPipe Tasks Vision `1.2.2`를 사용한다. [공식 Web 안내](https://deve
 
 다른 운동의 카메라 규칙은 Next.js 서버의 `POSE_REPETITION_RULES`에 운동 ID별 JSON으로 등록한다. 기존 푸시업 관절 규칙도 계속 지원하며, 등록된 푸시업을 화면 움직임 판정으로 전환하려면 `"push_up": {"method": "push-up-motion"}`을 설정한다.
 
+공개 영상에서 변환한 맨몸 운동 14종의 관절 좌표와 측면 스쿼트 재생 검사를 제공한다. [데이터 구성과 로컬 실행](../datasets/pose/README.md).
+
 | 필드 | 의미 |
 | --- | --- |
 | `joints` | 각도 계산에 사용할 MediaPipe 관절 인덱스 3개. 가운데 관절이 각도의 꼭짓점 |
