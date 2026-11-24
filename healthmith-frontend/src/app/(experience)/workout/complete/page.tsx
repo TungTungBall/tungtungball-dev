@@ -1,7 +1,4 @@
-import PreviewComplete from "./preview-complete";
+import { CycleComplete } from "@/components/cycle/screens";
 import { ConnectedWorkoutResult } from "./connected-result";
-export default async function CompletePage({ searchParams }: { searchParams: Promise<{ sessionId?: string | string[] }> }) {
-  const { sessionId } = await searchParams;
-  if (sessionId !== undefined) return <ConnectedWorkoutResult sessionId={typeof sessionId === "string" ? sessionId : "invalid"} />;
-  return <PreviewComplete />;
-}
+import { redirect } from "next/navigation";
+export default async function Page({searchParams}:{searchParams:Promise<{cycleId?:string;sessionId?:string;connected?:string}>}){const p=await searchParams;if(p.cycleId)return <CycleComplete id={p.cycleId}/>;if(p.sessionId)return <ConnectedWorkoutResult sessionId={p.sessionId}/>;redirect("/");}

@@ -4,7 +4,7 @@ import { Gem } from "@/components/healthmith/gem";
 import { ActionBar, ActionLink, Card, Notice, PageIntro } from "@/components/healthmith/ui";
 import { getUserSession } from "@/config/session";
 import { fetchBackendApi } from "@/lib/backend-api";
-import { gemStates, type GemState } from "@/lib/healthmith/preview-data";
+import { gemStates, type GemState } from "@/lib/healthmith/gem-data";
 import { parseWorkoutTendency, tendencyStatusMessage, type WorkoutTendency } from "@/lib/healthmith/tendency";
 
 type WorkoutRecord = {
@@ -123,7 +123,7 @@ export async function ConnectedRecordsView() {
     return <>
       <PageIntro eyebrow="MY CABINET" title="나의 운동 기록" description="로그인하면 저장된 운동과 보석을 확인할 수 있어요." />
       <ActionBar><ActionLink href="/login?next=%2Frecords">Google로 로그인</ActionLink></ActionBar>
-      <p className="hm-helper"><Link className="hm-text-link" href="/records?state=populated">예시 기록 미리보기</Link></p>
+      <p className="hm-helper"></p>
     </>;
   }
   if (result.state === "error") {

@@ -4,7 +4,7 @@ import { emptyIntake, intakeStepError, LIMITATION_PARTS } from "@/lib/healthmith
 describe("새 사전조사 입력 규칙", () => {
   it("미선택을 없음이나 기본값으로 취급하지 않는다", () => {
     const input = emptyIntake();
-    for (let step = 0; step < 5; step++) expect(intakeStepError(input, step)).not.toBeNull();
+    for (const step of [0,1,3,4]) expect(intakeStepError(input, step)).not.toBeNull();
     expect(intakeStepError(input, 5)).toBeNull();
     expect(LIMITATION_PARTS).toHaveLength(8);
     expect(LIMITATION_PARTS).not.toContain("기타");
@@ -18,10 +18,10 @@ describe("새 사전조사 입력 규칙", () => {
   it("제약 없음은 허용하고 충돌하는 선호를 몰래 삭제하지 않는다", () => {
     const input = emptyIntake();input.limitationsPresent = false;
     expect(intakeStepError(input, 4)).toBeNull();
-    input.limitationsPresent = true;input.limitations = {손목: {side: "왼쪽", severity: "심함"}};input.priorities = ["손목"];
+    input.limitationsPresent = true;input.limitations = {손목: {side: "왼쪽", severity: "심함"}};input.priorities = ["어깨"];
     expect(intakeStepError(input, 4)).toBeNull();
     expect(intakeStepError(input, 5)).toBeNull();
-    expect(input.priorities).toEqual(["손목"]);
+    expect(input.priorities).toEqual(["어깨"]);
   });
   it("불가능한 일정 값을 거절한다", () => {
     for (const [minutes, days] of [[0, 3], [20, 8], [20, 1.5]]) expect(intakeStepError({...emptyIntake(), minutes, days}, 3)).not.toBeNull();

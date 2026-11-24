@@ -3,20 +3,22 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { RepetitionCounter, type Landmark, type CameraRule } from "@/lib/healthmith/pose-counter";
 
+import { FrontalPushupCounter } from "@/lib/healthmith/frontal-pushup";
+
 const CAMERA_SIGNAL_TIMEOUT_MS = 1_000;
 
 type CameraMessage =
   | { type: "ready" }
   | { type: "error" }
-  | { type: "pose"; points: Landmark[]; time: number }
+  | { type: "pose"; points: Landmark[]; normalized?: Landmark[]; time: number }
   | { type: "motion"; completed: boolean; moving: boolean; tracking: boolean };
 
-export function PoseCamera({ rule, enabled, onRepetition, onPause, children }: { children: ReactNode; rule: CameraRule; enabled: boolean; onRepetition: () => void; onPause: (reason: "manual" | "no_motion") => void }) {
+export function PoseCamera({ rule, enabled, onRepetition, onPause, onTracking, resetWhenDisabled = false, children }: { resetWhenDisabled?: boolean; onTracking?: (tracking: boolean) => void; children: ReactNode; rule: CameraRule; enabled: boolean; onRepetition: () => void; onPause: (reason: "manual" | "no_motion") => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const callbacks = useRef({ onRepetition, onPause, enabled });
+  const callbacks = useRef({ onRepetition, onPause, onTracking, enabled, resetWhenDisabled });
   const [status, setStatus] = useState<"preparing" | "tracking" | "unavailable">("preparing");
   const guide = "카메라를 고정하고 밝은 곳에서 운동해 주세요. 푸시업은 정면에서 상체가 화면 중앙에 오도록, 관절을 사용하는 운동은 필요한 관절이 모두 보이도록 맞춰 주세요.";
-  useEffect(() => { callbacks.current = { onRepetition, onPause, enabled }; }, [onRepetition, onPause, enabled]);
+  useEffect(() => { callbacks.current = { onRepetition, onPause, onTracking, enabled, resetWhenDisabled }; }, [onRepetition, onPause, onTracking, enabled, resetWhenDisabled]);
   useEffect(() => {
     let disposed = false, busy = false, ready = false, framePending = false;
     let stream: MediaStream | undefined, worker: Worker | undefined, animation = 0;
@@ -25,7 +27,8 @@ export function PoseCamera({ rule, enabled, onRepetition, onPause, children }: {
     let lastResultTime = performance.now();
     let resetOnNextFrame = false;
     let tracking = false;
-    const counter = "method" in rule ? null : new RepetitionCounter(rule);
+    const frontal = "method" in rule && rule.method === "frontal-pushup";
+    const counter = frontal ? new FrontalPushupCounter() : "method" in rule ? null : new RepetitionCounter(rule);
     const pause = (reason: "manual" | "no_motion") => {
       if (disposed || paused) return;
       paused = true; ready = false; counter?.reset();
@@ -35,6 +38,7 @@ export function PoseCamera({ rule, enabled, onRepetition, onPause, children }: {
     const fail = () => {
       if (disposed) return;
       setStatus("unavailable");
+      callbacks.current.onTracking?.(false);
       pause("manual");
     };
     const visibility = () => { if (document.hidden) pause("manual"); };
@@ -71,7 +75,8 @@ export function PoseCamera({ rule, enabled, onRepetition, onPause, children }: {
 
           busy = false;
           if (!callbacks.current.enabled) {
-            counter?.suspend();
+            if(callbacks.current.resetWhenDisabled) counter?.reset(); else counter?.suspend();
+            resetOnNextFrame = callbacks.current.resetWhenDisabled || !counter;
             lastMotion = performance.now();
             return;
           }
@@ -80,21 +85,23 @@ export function PoseCamera({ rule, enabled, onRepetition, onPause, children }: {
           const result = data.type === "motion" && !counter
             ? data
             : data.type === "pose" && counter
-              ? counter.update(data.points, data.time)
+              ? counter.update(frontal ? data.normalized ?? [] : data.points, data.time)
               : null;
           if (!result) return;
           lastResultTime = now;
           tracking = result.tracking;
+          callbacks.current.onTracking?.(tracking);
           setStatus(tracking ? "tracking" : "unavailable");
           if (!tracking || result.moving) lastMotion = now;
           if (tracking && result.completed) callbacks.current.onRepetition();
         };
-        worker.postMessage({ type: "init" });
+        worker.postMessage({ type: "init", frontal });
         const frame = async (time: number) => {
           if (disposed || paused) return;
           animation = requestAnimationFrame(frame);
           if (!callbacks.current.enabled) {
-            counter?.suspend();
+            if(callbacks.current.resetWhenDisabled) counter?.reset(); else counter?.suspend();
+            resetOnNextFrame = callbacks.current.resetWhenDisabled || !counter;
             lastMotion = time;
             lastResultTime = time;
             return;
@@ -102,6 +109,7 @@ export function PoseCamera({ rule, enabled, onRepetition, onPause, children }: {
           if (ready && (videoTrack.muted || time - lastResultTime >= CAMERA_SIGNAL_TIMEOUT_MS)) {
             tracking = false;
             setStatus("unavailable");
+            callbacks.current.onTracking?.(false);
             counter?.reset();
             resetOnNextFrame = true;
             lastMotion = time;

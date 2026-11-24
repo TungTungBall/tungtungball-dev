@@ -181,7 +181,6 @@ test("카메라 반복 신호→실제 5단계 완료→보석·설문·기록�
   await expect(page.getByRole("img", { name: "완성된 보석" })).toBeVisible();
   await page.getByRole("link", { name: "오늘의 운동 느낌 남기기" }).click();
   await expect(page).toHaveURL(new RegExp(`/feedback\\?sessionId=${id}`));
-  await page.getByRole("link", { name: "기존 설문으로 응답하기" }).click();
   await page.getByRole("button", { name: "근육통 없음", exact: true }).click();
   await page.getByRole("button", { name: "난이도 3", exact: true }).click();
   await page.getByRole("button", { name: "재미 4", exact: true }).click();

@@ -21,11 +21,11 @@ beforeEach(() => {
 });
 
 describe("조회한 운동 기록의 표시", () => {
-  it("로그인이 없으면 실제 기록 조회 없이 로그인과 별도 예시 화면을 안내한다", async () => {
+  it("로그인이 없으면 실제 기록 조회 없이 로그인을 안내하고 예시 링크는 숨긴다", async () => {
     mocks.session.mockResolvedValue({ state: "anonymous" });
     const html = renderToStaticMarkup(await ConnectedRecordsView());
     expect(html).toContain("나의 운동 기록");
-    expect(html).toContain("/records?state=populated");
+    expect(html).not.toContain("/records?state=populated");
     expect(html).not.toContain("11.02 ◆ 에메랄드");
     expect(mocks.backend).not.toHaveBeenCalled();
   });
