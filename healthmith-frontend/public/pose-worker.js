@@ -21,7 +21,7 @@ self.onmessage = async ({ data }) => {
         x: p.x, y: p.y, z: p.z, visibility: normalized[i]?.visibility ?? 0,
         in_frame: normalized[i]?.x >= 0 && normalized[i]?.x <= 1 && normalized[i]?.y >= 0 && normalized[i]?.y <= 1,
       }));
-      self.postMessage({ type: "pose", points, time: data.time });
+      self.postMessage({ type: "pose", points, normalized: normalized.map(p => ({...p, in_frame: p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1})), time: data.time });
     } catch { self.postMessage({ type: "error" }); }
     finally { data.frame.close(); }
   }

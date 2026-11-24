@@ -1,7 +1,4 @@
-import PreviewWorkout from "./preview-workout";
+import { CycleWorkout } from "@/components/cycle/screens";
 import { ConnectedWorkout } from "./connected-workout";
-export default async function WorkoutPage({ searchParams }: { searchParams: Promise<{ sessionId?: string | string[]; connected?: string }> }) {
-  const { sessionId, connected } = await searchParams;
-  if (sessionId !== undefined || connected === "1") return <ConnectedWorkout sessionId={sessionId === undefined ? undefined : typeof sessionId === "string" ? sessionId : "invalid"} />;
-  return <PreviewWorkout />;
-}
+import { redirect } from "next/navigation";
+export default async function Page({searchParams}:{searchParams:Promise<{cycleId?:string;sessionId?:string;connected?:string}>}){const p=await searchParams;if(p.cycleId)return <CycleWorkout id={p.cycleId}/>;if(p.sessionId)return <ConnectedWorkout sessionId={p.sessionId}/>;if(p.connected==="1")return <ConnectedWorkout/>;redirect("/");}

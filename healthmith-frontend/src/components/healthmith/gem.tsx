@@ -1,11 +1,11 @@
 import Image from "next/image";
-import type { GemState } from "@/lib/healthmith/preview-data";
+import type { GemState } from "@/lib/healthmith/gem-data";
 import ore from "./assets/gem-ore.svg";
 import mined from "./assets/gem-mined.svg";
 import split from "./assets/gem-split.svg";
 import washed from "./assets/gem-washed.svg";
 import cut from "./assets/gem-cut.svg";
-import polished from "./assets/gem-polished.svg";
+import polished from "./assets/gem-ruby.svg";
 import pristine from "./assets/gem-pristine.svg";
 import cracked from "./assets/gem-cracked.svg";
 import fragments from "./assets/gem-fragments.svg";

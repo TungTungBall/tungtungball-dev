@@ -2,25 +2,7 @@ import { expect, test } from "@playwright/test";
 
 // CI에는 실제 로그인·DB·Gemini 설정을 넣지 않는다. 이 파일은 진입 경로와
 // 비로그인·잘못된 주소의 화면을 검사하며 실제 외부 서비스 검증을 대신하지 않는다.
-test("홈 시작 버튼은 새 사전조사로 연결하고 기존 저장 양식도 제공한다", async ({ page }) => {
-  await page.goto("/");
-  await page.getByRole("link", { name: "첫 여정 시작하기" }).click();
-  await expect(page).toHaveURL(/\/survey$/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("운동 목표");
-  await expect(page.getByRole("link", { name: "기존 양식으로 입력하기" })).toHaveAttribute("href", "/survey/legacy");
-});
-
-test("기록 기본 화면은 로그인 없이 예시를 실제 기록으로 보여 주지 않는다", async ({ page }) => {
-  await page.goto("/records");
-  await expect(page.getByRole("heading", { name: "나의 운동 기록" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Google로 로그인", exact: true })).toHaveAttribute("href", "/login?next=%2Frecords");
-  await expect(page.getByText("11.02 ◆ 에메랄드", { exact: true })).toHaveCount(0);
-  await page.getByRole("link", { name: "예시 기록 미리보기", exact: true }).click();
-  await expect(page).toHaveURL(/\/records\?state=populated$/);
-  await expect(page.getByText("표시된 기록은 디자인 예시예요.", { exact: true })).toBeVisible();
-  await expect(page.getByText("11.02 ◆ 에메랄드", { exact: true })).toBeVisible();
-});
-
+test("홈에서 저장 조건 입력으로 이동하고 예시 링크를 노출하지 않는다",async({page})=>{await page.goto("/");await page.getByRole("link",{name:"내 운동 조건 입력하기"}).click();await expect(page).toHaveURL(/\/survey$/);await expect(page.getByRole("link",{name:/기존 양식/})).toHaveCount(0);});
 test("생성 상태 조회는 로그인 없이 완료 초안을 만들지 않는다", async ({ page }) => {
   await page.goto("/routine/generation/10000000-0000-4000-8000-000000000001");
   await expect(page.getByRole("heading", { name: "초안을 불러오지 못했어요" })).toBeVisible();
@@ -32,15 +14,6 @@ test("생성 상태 조회는 로그인 없이 완료 초안을 만들지 않는
   await expect(page.getByText("로그인 상태를 확인해 주세요.", { exact: true })).toBeVisible();
   await expect(page).toHaveURL(url);
   await expect(page.locator(".hm-routine-item")).toHaveCount(0);
-});
-
-test("320px 디자인 목록은 실제 서비스와 예시 경로를 구분한다", async ({ page }) => {
-  await page.setViewportSize({ width: 320, height: 740 });
-  await page.goto("/design");
-  await expect(page.getByRole("heading", { name: "화면 디자인 예시", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "사전조사 입력", exact: true })).toHaveAttribute("href", "/survey");
-  await expect(page.getByRole("link", { name: "진행 중인 운동", exact: true })).toHaveAttribute("href", "/workout?connected=1");
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
 test("잘못된 운동 세션 주소는 설문 대신 기록 복귀를 안내한다", async ({ page }) => {

@@ -58,6 +58,10 @@ const server = createServer(async (req, res) => {
       sql(`UPDATE private.runtime_policies SET value='{"allow_reuse":true}'::jsonb WHERE name='workout_start';`);
       return send(200, {});
     }
+    if(req.url === "/test/cycle-reset" && req.method === "POST") {sql("TRUNCATE public.workout_sessions CASCADE; TRUNCATE private.cycle_receipts,private.cycle_sessions,private.cycle_requests,private.survey_v2_receipts,public.survey_submissions_v2 CASCADE;");return send(200,{});}
+    if(req.url === "/test/cycle-publish" && req.method === "POST") {
+      sql(`DO $$ DECLARE j jsonb; BEGIN j:=public.generation_worker('cycle_poll','${workerId}',300,'{}'); IF j <> 'null'::jsonb THEN PERFORM public.generation_worker('cycle_publish','${workerId}',300,j || jsonb_build_object('explanation','habit','stages',(select jsonb_agg(jsonb_build_object('stage_index',i,'exercise_id',j->'plan'->>'exercise_id','reps',(j->'plan'->>'reps')::integer) order by i) from generate_series(1,5) i)));END IF;END $$;`);return send(200,{});
+    }
     return send(404, {});
   } catch { return send(500, { error: "isolated fixture failed" }); }
 });

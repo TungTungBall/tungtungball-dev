@@ -54,7 +54,34 @@ public class GenerationWorkerService {
                             return database.execute(summary ? "publish_summary" : "publish_curriculum",workerId,payload)
                                     .flatMap(accepted -> accepted.asBoolean(false) ? Mono.empty() : fail(job,"INVALID_GENERATED_CURRICULUM"));
                         }).onErrorResume(error -> fail(job,error instanceof IllegalArgumentException ? "INVALID_GENERATED_CURRICULUM" : error instanceof java.util.concurrent.TimeoutException ? "GENERATION_TIMEOUT" : "LLM_UNAVAILABLE"));
-                }).then();
+                }).then(database.directDatabase() ? cycleTick() : Mono.empty());
+    }
+    private Mono<Void> cycleTick() {
+        return database.execute("cycle_poll",workerId,new Empty()).flatMap(job -> {
+            if(job.isNull())return Mono.empty();
+            var safe=mapper.createObjectNode();safe.set("goal",job.path("goal"));
+            var plan=job.path("plan");
+            for(String key:new String[]{"exercise_id","reps","reason"})safe.set(key,plan.path(key));
+            // reason may mention discomfort; send only numerical plan and approved preference keywords.
+            safe.remove("reason");safe.set("keywords",job.path("keywords"));safe.set("priority_body_parts",job.path("priority_body_parts"));
+            safe.put("stage_count",5);
+            var schema=mapper.readTree("""
+                {"type":"object","properties":{"explanation":{"type":"string","enum":["steady","habit","control"]},
+                "stages":{"type":"array","minItems":5,"maxItems":5,"items":{"type":"object","properties":{
+                "stage_index":{"type":"integer"},"exercise_id":{"type":"string"},"reps":{"type":"integer"}},
+                "required":["stage_index","exercise_id","reps"],"additionalProperties":false}}},"required":["explanation","stages"],"additionalProperties":false}
+                """);
+            return gemini.generate(safe,schema,"서버가 허용한 exercise_id와 reps를 그대로 사용해 stage_index 1부터 5까지 루틴을 구성하세요. 운동 목표와 확인된 선호도에 맞는 안내 ID 하나를 고르세요. steady: 일정한 속도, habit: 꾸준한 참여, control: 동작 제어. 운동 종류나 횟수, 안전 안내를 바꾸지 마세요.")
+                .flatMap(output->{
+                    if(output.size()!=2||!output.path("stages").isArray()||output.path("stages").size()!=5||!java.util.Set.of("steady","habit","control").contains(output.path("explanation").asString()))return Mono.error(new IllegalArgumentException());
+                    for(int i=0;i<5;i++){
+                        var stage=output.path("stages").get(i);
+                        if(stage.size()!=3||stage.path("stage_index").asInt()!=i+1||!stage.path("exercise_id").equals(plan.path("exercise_id"))||!stage.path("reps").equals(plan.path("reps")))return Mono.error(new IllegalArgumentException());
+                    }
+                    var payload=mapper.createObjectNode();payload.set("request_id",job.path("request_id"));payload.set("lease_token",job.path("lease_token"));payload.set("explanation",output.path("explanation"));payload.set("stages",output.path("stages"));
+                    return database.execute("cycle_publish",workerId,payload).flatMap(ok->ok.asBoolean()?Mono.<Void>empty():Mono.<Void>error(new IllegalArgumentException()));
+                }).onErrorResume(error->{var payload=mapper.createObjectNode();payload.set("request_id",job.path("request_id"));payload.set("lease_token",job.path("lease_token"));return database.execute("cycle_fail",workerId,payload).then();});
+        });
     }
     /** 금지된 건강·식별자·자유 텍스트를 전송 객체에 복사하지 않는다. */
     public JsonNode safeInput(JsonNode job) {

@@ -1,0 +1,14 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>정면 푸시업 개발 검사</title><style>body{background:#000;color:white;font:18px sans-serif;max-width:700px;margin:40px auto}video{width:100%}</style><h1>정면 푸시업 비교</h1><p>개발 전용 · 영상은 이 브라우저에서만 처리합니다.</p><input type="file" accept="video/*"><video muted playsinline controls></video><pre></pre><script type="module">
+import {FrontalPushupCounter,FRONTAL_PUSHUP_VERSION} from '/counter.js';
+const video=document.querySelector('video'),output=document.querySelector('pre');
+document.querySelector('input').onchange=async e=>{let url,pose,pixel;try{
+ url=URL.createObjectURL(e.target.files[0]);video.src=url;await new Promise(r=>video.onloadedmetadata=r);
+ pose=new Worker('/pose-worker.js');pixel=new Worker('/push-up-worker.mjs',{type:'module'});
+ const ask=(worker,data,transfer=[])=>new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('worker timeout')),30000);worker.onmessage=e=>{clearTimeout(timer);e.data.type==='error'?reject(new Error('worker failed')):resolve(e.data)};worker.postMessage(data,transfer);});
+ await Promise.all([ask(pose,{type:'init',frontal:true}),ask(pixel,{type:'init'})]);const counter=new FrontalPushupCounter();let frontal=0,pixels=0,unavailable=0,frames=0;
+ for(let t=.08;t<video.duration;t+=.08){video.currentTime=t;await new Promise(r=>video.onseeked=r);const a=await createImageBitmap(video),b=await createImageBitmap(video);
+ const [p,m]=await Promise.all([ask(pose,{type:'frame',frame:a,time:t*1000},[a]),ask(pixel,{type:'frame',frame:b,time:t*1000},[b])]);
+ const result=counter.update(p.normalized??[],t*1000);frontal+=Number(result.completed);pixels+=Number(m.completed);unavailable+=Number(!result.tracking);frames++;output.textContent=`${t.toFixed(1)}초 / 정면 ${frontal} / 기존 ${pixels}`;}
+ window.result={detector:FRONTAL_PUSHUP_VERSION,frontal,pixel:pixels,frames,unavailable_frames:unavailable,duration_seconds:video.duration};output.textContent=JSON.stringify(window.result,null,2);
+}catch(error){window.result={error:error.message};}finally{pose?.terminate();pixel?.terminate();if(url)URL.revokeObjectURL(url);}};
+</script></html>

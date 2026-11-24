@@ -127,3 +127,17 @@
     @apply font-sans;
     }
 }
+
+/* Service cycle: use the existing black / ruby palette and Wanted Sans. */
+.hm-cycle { display: grid; gap: 20px; padding: 20px 0 40px; min-width: 0; }
+.hm-cycle h1 { font-size: clamp(28px, 8vw, 40px); font-weight: 800; line-height: 1.2; }
+.hm-cycle h2 { font-size: 22px; font-weight: 750; }
+.hm-cycle p, .hm-cycle label, .hm-cycle summary { font-size: 16px; line-height: 1.6; color: #ddd; }
+.hm-cycle .hm-eyebrow { color: #ff5267; font-weight: 800; }
+.hm-cycle-count { display: block; font-size: clamp(34px, 10vw, 52px); font-weight: 850; color: #fff; }
+.hm-cycle-fieldset { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 20px; }
+.hm-cycle textarea { width: 100%; min-height: 112px; border: 1px solid #555; border-radius: 12px; padding: 14px; background: #111; color: white; font: inherit; }
+.hm-cycle input[type=checkbox] { width: 20px; height: 20px; margin-right: 10px; accent-color: #ef334b; }
+.hm-radar { width: 100%; max-width: 400px; margin: auto; }
+.hm-cycle-record { display: flex; justify-content: space-between; gap: 16px; border-bottom: 1px solid #333; padding: 16px 0; }
+.hm-cycle .hm-gem { width: 160px; height: 160px; margin: auto; }

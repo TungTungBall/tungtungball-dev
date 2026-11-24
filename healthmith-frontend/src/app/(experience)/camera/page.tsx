@@ -1,7 +1,7 @@
-import PreviewCamera from "./preview-camera";
+import { redirect } from "next/navigation";
 import { ConnectedCamera } from "./connected-camera";
 export default async function CameraPage({ searchParams }: { searchParams: Promise<{ curriculumId?: string | string[] }> }) {
   const { curriculumId } = await searchParams;
   if (curriculumId !== undefined) return <ConnectedCamera key={String(curriculumId)} curriculumId={typeof curriculumId === "string" ? curriculumId : "invalid"} />;
-  return <PreviewCamera />;
+  redirect("/");
 }

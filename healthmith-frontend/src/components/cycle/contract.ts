@@ -1,0 +1,7 @@
+export type Plan = {exercise_id:string;exercise_name:string;variant:string;reps:number;baseline_reps:number;stages:5;cap:number;rest_seconds:number;max_rest_seconds:number;estimated_seconds:number;goal:string;reason:string;instructions:{start:string;mistake:string;stop:string};blocked?:boolean};
+export type Request = {id:string;status:"queued"|"running"|"succeeded"|"failed";plan:Plan;explanation:string|null;error:string|null;created_at:string};
+export type Session = {id:string;request_id:string;status:"active"|"paused"|"completed"|"stopped";counts:number[];stage:number;version:number;rest_until:string|null;tracking_lost:boolean;stop_reason:string|null;feedback_status:"pending"|"submitted"|"skipped";feedback:unknown;gem:"polished"|"unfinished"|"dull"|null;started_at:string;ended_at:string|null;active_ms:number;request:Request};
+export type Profile = {status:string;sample_count:number;axes:{name:string;value:number|null;status:string}[];note:string;recent_active_ms:number;promotions:number};
+export type KeywordPreview={keywords:string[];pain:boolean;dictionary_version:string};
+export const keywordLabels:Record<string,string>={other_area:"다른 부위도",same_exercise:"같은 운동 계속",variety:"더 다양하게",more_rest:"휴식 늘리기",less_rest:"휴식 줄이기"};
+for(const [code,label] of Object.entries({arms:"팔",legs:"다리",core:"코어",shoulder:"어깨",chest:"가슴",neck:"목"})){keywordLabels[`prefer_${code}`]=`${label} 운동 선호`;keywordLabels[`avoid_${code}`]=`${label} 운동 덜 하기`;}
